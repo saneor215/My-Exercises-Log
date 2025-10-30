@@ -195,7 +195,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
 
     // --- WORKOUT HANDLERS ---
     const handleAddPart = () => {
-        if (!newPartName.trim()) return;
+        if (!newPartName.trim()) {
+            alert("الرجاء إدخال اسم للجزء الجديد.");
+            return;
+        }
         const newPartId = newPartName.trim().toLowerCase().replace(/\s+/g, '-');
         if (bodyParts.some(p => p.id === newPartId)) { alert('هذا الجزء موجود بالفعل.'); return; }
         const colorScheme = COLOR_SCHEMES[bodyParts.length % COLOR_SCHEMES.length];
@@ -298,7 +301,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
             
             {/* WORKOUT MANAGEMENT */}
             <section>
-                <h2 className="text-2xl font-bold text-white mb-6">🏋️ إدارة التمارين</h2>
+                <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-6">🏋️ إدارة التمارين</h2>
                 {/* Body Parts */}
                 <div className="space-y-4">
                     <h3 className="text-xl font-bold text-gray-200">الأجزاء الحالية</h3>
@@ -346,12 +349,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
 
             {/* NUTRITION MANAGEMENT */}
             <section className="pt-8 border-t border-gray-700">
-                <h2 className="text-2xl font-bold text-white mb-6">🍎 إدارة التغذية</h2>
+                <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-lime-300 bg-clip-text text-transparent mb-6">🍎 إدارة التغذية</h2>
                  {/* Goals */}
                 <div>
                     <h3 className="text-xl font-bold text-gray-200 mb-4">أهدافك اليومية</h3>
-                    <div className="space-y-4 md:space-y-0 md:flex md:items-end md:gap-4">
-                        <div className="grid grid-cols-2 gap-4 flex-grow">
+                    <div className="space-y-4 md:space-y-0 md:flex md:items-end md:gap-4 flex-wrap">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-grow">
                              <div>
                                 <label htmlFor="goal-calories" className="block text-sm font-medium text-gray-200 mb-1">السعرات الحرارية</label>
                                 <input id="goal-calories" type="number" name="calories" value={editedGoals.calories} onChange={handleGoalChange} placeholder="2000" className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -369,7 +372,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                                 <input id="goal-fat" type="number" name="fat" value={editedGoals.fat} onChange={handleGoalChange} placeholder="65" className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
                         </div>
-                        <button onClick={() => setNutritionGoals(editedGoals)} className="w-full md:w-auto flex-shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg h-10">حفظ الأهداف</button>
+                        <button onClick={() => setNutritionGoals(editedGoals)} className="w-full sm:w-auto flex-shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg h-10">حفظ الأهداف</button>
                     </div>
                 </div>
                  {/* Food Database */}
@@ -430,7 +433,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
             
             {/* DATA MANAGEMENT */}
             <section className="pt-8 border-t border-gray-700">
-                <h2 className="text-2xl font-bold text-white mb-6">💾 إدارة البيانات</h2>
+                <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent mb-6">💾 إدارة البيانات</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button onClick={handleExport} className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-lg">
                         <ExportIcon className="w-5 h-5"/> <span>تصدير كل البيانات</span>
