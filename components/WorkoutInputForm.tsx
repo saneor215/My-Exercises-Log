@@ -1,0 +1,257 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import type { WorkoutEntry, BodyPartId } from '../types';
+import { BODY_PARTS, EXERCISES } from '../constants';
+import { SaveIcon, ClockIcon } from './Icons';
+
+interface WorkoutInputFormProps {
+  onAddEntry: (entry: Omit<WorkoutEntry, 'id' | 'date' | 'image'>) => void;
+}
+
+const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }> = ({ children, ...props }) => (
+    <div className="relative">
+        <select
+            {...props}
+            className="w-full bg-gray-700 border-gray-600 text-white px-4 py-3 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+        >
+            {children}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-2 text-gray-400">
+            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+    </div>
+);
+
+
+export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry }) => {
+  const [selectedPart, setSelectedPart] = useState<BodyPartId | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<string>('');
+  const [weight, setWeight] = useState<string>('');
+  const [reps, setReps] = useState<string>('');
+  const [comment, setComment] = useState('');
+  const [week, setWeek] = useState<string>('');
+
+  const REST_DURATION = 60;
+  const [timeLeft, setTimeLeft] = useState(REST_DURATION);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  
+  const exerciseImage = useMemo(() => {
+    if (!selectedPart || !selectedExercise) return null;
+    return EXERCISES[selectedPart].find(ex => ex.name === selectedExercise)?.image;
+  }, [selectedPart, selectedExercise]);
+
+  useEffect(() => {
+    if (selectedPart) {
+      setSelectedExercise(EXERCISES[selectedPart][0]?.name || '');
+    } else {
+      setSelectedExercise('');
+    }
+  }, [selectedPart]);
+
+  useEffect(() => {
+    if (!isTimerRunning) return;
+
+    if (timeLeft <= 0) {
+        setIsTimerRunning(false);
+        setTimeLeft(REST_DURATION);
+        // You could add an audio alert here
+        return;
+    }
+
+    const intervalId = setInterval(() => {
+        setTimeLeft(prevTime => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isTimerRunning, timeLeft]);
+
+  const handleTimerToggle = () => {
+    if (isTimerRunning) {
+        setIsTimerRunning(false);
+        setTimeLeft(REST_DURATION);
+    } else {
+        setTimeLeft(REST_DURATION);
+        setIsTimerRunning(true);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPart || !selectedExercise) {
+      alert("الرجاء اختيار الجزء والتمرين");
+      return;
+    }
+    const weightNum = parseFloat(weight);
+    const repsNum = parseInt(reps, 10);
+    const weekNum = parseInt(week, 10);
+
+    if (isNaN(weekNum) || weekNum <= 0) {
+        alert("الرجاء إدخال رقم أسبوع صحيح");
+        return;
+    }
+    if (isNaN(weightNum) || weightNum <= 0) {
+        alert("الرجاء إدخال وزن صحيح");
+        return;
+    }
+    if (isNaN(repsNum) || repsNum <= 0) {
+        alert("الرجاء إدخال عدد تكرارات صحيح");
+        return;
+    }
+
+    onAddEntry({
+      part: selectedPart,
+      exercise: selectedExercise,
+      weight: weightNum,
+      reps: repsNum,
+      week: weekNum,
+      comment: comment.trim() || undefined,
+    });
+    setWeight('');
+    setReps('');
+    setComment('');
+    setWeek('');
+  };
+
+  return (
+    <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-lg font-medium text-gray-300 mb-3">اختر الجزء:</label>
+          <div className="grid grid-cols-3 gap-3">
+            {BODY_PARTS.map((part) => (
+              <button
+                type="button"
+                key={part.id}
+                onClick={() => setSelectedPart(part.id)}
+                className={`p-4 rounded-xl text-center font-semibold transition-all duration-300 focus:outline-none focus:ring-4 ${
+                  selectedPart === part.id
+                    ? `bg-gradient-to-br ${part.gradient} text-white shadow-lg scale-105 ring-4 ring-offset-2 ring-offset-gray-800 ring-${part.color}-500`
+                    : `bg-gray-700 hover:bg-gray-600 text-gray-300 ring-1 ring-gray-600`
+                }`}
+              >
+                {part.icon} {part.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selectedPart && (
+            <>
+                <div>
+                    <label htmlFor="exercise-select" className="block text-sm font-medium text-gray-300 mb-2">التمرين</label>
+                    <CustomSelect id="exercise-select" value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)}>
+                        {EXERCISES[selectedPart].map((ex) => (
+                            <option key={ex.name} value={ex.name}>{ex.name}</option>
+                        ))}
+                    </CustomSelect>
+                </div>
+
+                {exerciseImage && (
+                    <div className="flex justify-center my-4 opacity-0 animate-fade-in">
+                        <div className="w-full max-w-[150px] aspect-square">
+                            <img src={exerciseImage} alt={selectedExercise} className="w-full h-full rounded-2xl object-cover bg-gray-700 shadow-lg" />
+                        </div>
+                    </div>
+                )}
+                
+                <div>
+                    <label htmlFor="comment" className="block text-sm font-medium text-gray-300 mb-2">تعليق (اختياري)</label>
+                    <textarea 
+                        id="comment"
+                        value={comment}
+                        onChange={e => setComment(e.target.value)}
+                        rows={2}
+                        placeholder='مثال: الوزن كان جيداً، التركيز على الأداء...'
+                        className="w-full bg-gray-700 border-gray-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="weight-input" className="block text-sm font-medium text-gray-300 mb-2">الوزن (كجم)</label>
+                        <input
+                            id="weight-input"
+                            type="number"
+                            inputMode="decimal"
+                            step="0.5"
+                            min="0"
+                            value={weight}
+                            onChange={(e) => setWeight(e.target.value)}
+                            placeholder="مثال: 20.5"
+                            className="w-full bg-gray-700 border-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="reps-input" className="block text-sm font-medium text-gray-300 mb-2">التكرارات</label>
+                         <input
+                            id="reps-input"
+                            type="number"
+                            inputMode="numeric"
+                            step="1"
+                            min="1"
+                            value={reps}
+                            onChange={(e) => setReps(e.target.value)}
+                            placeholder="مثال: 10"
+                            className="w-full bg-gray-700 border-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            required
+                        />
+                    </div>
+                </div>
+                 <div>
+                    <label htmlFor="week-input" className="block text-sm font-medium text-gray-300 mb-2">رقم الأسبوع</label>
+                    <input
+                        id="week-input"
+                        type="number"
+                        inputMode="numeric"
+                        step="1"
+                        min="1"
+                        value={week}
+                        onChange={(e) => setWeek(e.target.value)}
+                        placeholder="مثال: 4"
+                        className="w-full bg-gray-700 border-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        required
+                    />
+                </div>
+
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-4 border-t border-gray-700">
+                    <button
+                        type="button"
+                        onClick={handleTimerToggle}
+                        className={`flex items-center justify-center gap-2 border-2 font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 relative overflow-hidden ${isTimerRunning ? 'border-red-500 text-red-400' : 'border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 focus:ring-cyan-400'}`}
+                    >
+                        {isTimerRunning && (
+                            <div className="absolute top-0 right-0 h-full bg-red-500/20" style={{width: `${(timeLeft / REST_DURATION) * 100}%`, transition: 'width 1s linear'}}></div>
+                        )}
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                            <ClockIcon className="w-5 h-5" />
+                            {isTimerRunning ? `${timeLeft} ثانية متبقية` : 'مؤقت الراحة'}
+                        </span>
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={!selectedPart}
+                        className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-400"
+                    >
+                        <SaveIcon className="w-5 h-5" />
+                        <span>حفظ التمرين</span>
+                    </button>
+                </div>
+            </>
+        )}
+      </form>
+    </div>
+  );
+};
+
+// Add keyframes for animation
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+`;
+document.head.appendChild(style);
