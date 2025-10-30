@@ -9,6 +9,7 @@ import { Navigation } from './components/Navigation';
 import { CalendarPage } from './components/CalendarPage';
 import { DietPage } from './components/DietPage';
 import { SettingsPage } from './components/SettingsPage';
+import { ProgressPage } from './components/ProgressPage';
 
 type View = 'log' | 'calendar' | 'progress' | 'diet' | 'settings';
 
@@ -153,7 +154,13 @@ export default function App(): React.ReactElement {
                 exercises={exercises}
               />
            )}
-           {activeView === 'progress' && <div className="text-center p-10 bg-gray-800 rounded-xl">صفحة التقدم قيد الإنشاء...</div>}
+           {activeView === 'progress' && (
+              <ProgressPage 
+                log={log}
+                bodyParts={bodyParts}
+                exercises={exercises}
+              />
+           )}
            {activeView === 'diet' && <DietPage content={dietPlan} onSave={setDietPlan} />}
            {activeView === 'settings' && (
               <SettingsPage
