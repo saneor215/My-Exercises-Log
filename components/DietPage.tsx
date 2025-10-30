@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { NutritionGoals, FoodItem, DailyDietLog, MealType, LoggedFood, MicronutrientInfo } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, PlusCircleIcon, TrashIcon, XIcon, SaveIcon } from './Icons';
 import { ManageFoodItemModal } from './ManageFoodItemModal';
@@ -71,16 +71,33 @@ const AddFoodModal: React.FC<{
     onLogFood: (foodId: string, servings: number) => void;
     onAddNewFood: () => void;
 }> = ({ isOpen, onClose, foodDatabase, onLogFood, onAddNewFood }) => {
-    const [selectedFoodId, setSelectedFoodId] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedFoodId, setSelectedFoodId] = useState<string | null>(null);
     const [servings, setServings] = useState('1');
 
-    React.useEffect(() => {
-        if (isOpen && foodDatabase.length > 0) {
-            setSelectedFoodId(foodDatabase[0].id);
-        } else if (isOpen) {
-            setSelectedFoodId('');
+    useEffect(() => {
+        if (!isOpen) {
+            // Delay reset to avoid UI flicker while modal closes
+            setTimeout(() => {
+                setSearchQuery('');
+                setSelectedFoodId(null);
+                setServings('1');
+            }, 300);
         }
-    }, [isOpen, foodDatabase]);
+    }, [isOpen]);
+
+    const searchResults = useMemo(() => {
+        if (!searchQuery.trim()) return [];
+        const searchLower = searchQuery.toLowerCase();
+        return foodDatabase.filter(food =>
+            food.name.toLowerCase().includes(searchLower) ||
+            food.keywords?.some(k => k.toLowerCase().includes(searchLower))
+        ).slice(0, 7); // Limit results for performance
+    }, [searchQuery, foodDatabase]);
+    
+    const selectedFood = useMemo(() => {
+        return foodDatabase.find(f => f.id === selectedFoodId);
+    }, [selectedFoodId, foodDatabase]);
 
     if (!isOpen) return null;
 
@@ -88,14 +105,17 @@ const AddFoodModal: React.FC<{
         e.preventDefault();
         const servingsNum = parseFloat(servings);
         if (!selectedFoodId || isNaN(servingsNum) || servingsNum <= 0) {
-            alert("بيانات غير صالحة.");
+            alert("يرجى اختيار طعام وإدخال كمية صالحة.");
             return;
         }
         onLogFood(selectedFoodId, servingsNum);
         onClose();
     };
-    
-    const selectedFood = foodDatabase.find(f => f.id === selectedFoodId);
+
+    const handleSelectFood = (food: FoodItem) => {
+        setSelectedFoodId(food.id);
+        setSearchQuery(food.name); // Populate input for clarity
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
@@ -103,19 +123,37 @@ const AddFoodModal: React.FC<{
                 <h2 className="text-xl font-bold text-white mb-4">إضافة طعام</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm text-gray-400 mb-1">اختر من قاعدة البيانات</label>
-                        <select value={selectedFoodId} onChange={e => setSelectedFoodId(e.target.value)} className="w-full bg-gray-700 text-white p-2 rounded-lg" disabled={foodDatabase.length === 0}>
-                           {foodDatabase.length > 0 ? (
-                                foodDatabase.map(food => <option key={food.id} value={food.id}>{food.name}</option>)
-                           ) : (
-                               <option>قاعدة البيانات فارغة</option>
-                           )}
-                        </select>
-                         <button type="button" onClick={onAddNewFood} className="text-sm text-blue-400 hover:underline mt-2">...أو أضف عنصرًا جديدًا لقاعدة البيانات</button>
+                        <label htmlFor="food-search" className="block text-sm text-gray-400 mb-1">ابحث في قاعدة البيانات</label>
+                        <div className="relative">
+                            <input
+                                id="food-search"
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="مثال: صدر دجاج"
+                                className="w-full bg-gray-700 text-white p-2 rounded-lg"
+                                autoComplete="off"
+                            />
+                            {searchResults.length > 0 && searchQuery !== selectedFood?.name && (
+                                <div className="absolute z-10 w-full mt-1 bg-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    {searchResults.map(food => (
+                                        <button
+                                            type="button"
+                                            key={food.id}
+                                            onClick={() => handleSelectFood(food)}
+                                            className="block w-full text-right px-3 py-2 hover:bg-gray-500 transition-colors"
+                                        >
+                                            {food.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <button type="button" onClick={onAddNewFood} className="text-sm text-blue-400 hover:underline mt-2">...أو أضف عنصرًا جديدًا لقاعدة البيانات</button>
                     </div>
                     <div>
-                        <label className="block text-sm text-gray-400 mb-1">الكمية ({selectedFood?.servingSize || 'حصص'})</label>
-                        <input type="number" step="0.1" min="0.1" value={servings} onChange={e => setServings(e.target.value)} className="w-full bg-gray-700 text-white p-2 rounded-lg" />
+                        <label htmlFor="food-servings" className="block text-sm text-gray-400 mb-1">الكمية ({selectedFood?.servingSize || 'حصص'})</label>
+                        <input id="food-servings" type="number" step="0.1" min="0.1" value={servings} onChange={e => setServings(e.target.value)} className="w-full bg-gray-700 text-white p-2 rounded-lg" disabled={!selectedFoodId} />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-600 rounded-lg">إلغاء</button>
