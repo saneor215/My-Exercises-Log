@@ -1,9 +1,9 @@
 import type { BodyPart, BodyPartId, Exercise, NutritionGoals, FoodItem, DailyDietLog, MicronutrientInfo } from './types';
 
 export const INITIAL_BODY_PARTS: BodyPart[] = [
-    { id: 'upper', name: 'علوي', icon: '💪', color: 'blue', gradient: 'from-blue-500 to-cyan-400' },
-    { id: 'lower', name: 'سفلي', icon: '🦵', color: 'green', gradient: 'from-green-500 to-lime-400' },
-    { id: 'friday', name: 'معدة', icon: '🔥', color: 'yellow', gradient: 'from-yellow-500 to-amber-400' }
+    { id: 'upper', name: 'علوي', icon: '💪', color: 'sky', gradient: 'from-sky-500 to-cyan-400' },
+    { id: 'lower', name: 'سفلي', icon: '🦵', color: 'emerald', gradient: 'from-emerald-500 to-green-400' },
+    { id: 'friday', name: 'معدة', icon: '🔥', color: 'orange', gradient: 'from-orange-500 to-amber-400' }
 ];
 
 export const INITIAL_EXERCISES: Record<BodyPartId, Exercise[]> = {
