@@ -1,10 +1,9 @@
-
 import React, { useState, useCallback } from 'react';
 import { WorkoutInputForm } from './components/WorkoutInputForm';
 import { WorkoutLog } from './components/WorkoutLog';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { WorkoutEntry, BodyPart, Exercise, BodyPartId, WorkoutRoutine } from './types';
-import { INITIAL_EXERCISES, INITIAL_BODY_PARTS } from './constants';
+import type { WorkoutEntry, BodyPart, Exercise, BodyPartId, WorkoutRoutine, AppData, NutritionGoals, FoodItem, DailyDietLog, LoggedFood, MealType } from './types';
+import { INITIAL_EXERCISES, INITIAL_BODY_PARTS, INITIAL_NUTRITION_GOALS, INITIAL_FOOD_DATABASE, INITIAL_DAILY_DIET_LOGS } from './constants';
 import { Navigation } from './components/Navigation';
 import { CalendarPage } from './components/CalendarPage';
 import { DietPage } from './components/DietPage';
@@ -13,64 +12,24 @@ import { ProgressPage } from './components/ProgressPage';
 
 type View = 'log' | 'calendar' | 'progress' | 'diet' | 'settings';
 
-const initialDietPlan = `برنامجك الغذائي (النسخة الأخف – 1850–1900 سعرة)
-________________________________________
-🍳 الفطور – 6:00 صباحاً
-•	6 جم كولاجين + ملعقة صغيرة عسل على الريق
-•	3 بيضات (مسلوقة أو مقلية خفيفة)
-•	نصف حبة خبز بر أو شريحة توست بر محمصة + ملعقة صغيرة زيت زيتون
-•	كوب قهوة (16 أونصة ≈ 470 مل) بدون سكر
-•	ماء كثير
-________________________________________
-🍏 وجبة خفيفة – 12:00 ظهراً
-•	موزة (ثابتة)
-•	تفاحة أو برتقالة (تبديل يومي)
-________________________________________
-🥜 الوجبة الثانية – 3:00 عصراً
-•	حفنة مكسرات صغيرة (7–10 جم: لوز – جوز – كاجو)
-•	ملعقتين كبار سمسم
-________________________________________
-🍽️ الوجبة الرئيسية – 6:00 مساءً
-•	6 ملاعق كبار رز أسمر مطبوخ
-•	صدر دجاج متوسط أو فخذ مشوي
-•	صحن سلطة كبير (خضار + ورقيات) + ملعقة صغيرة زيت زيتون
-•	7 ملاعق إدام (شفوت/بامية/فاصوليا/عدس)
-•	نصف حبة بطاطا حلوة (يوم ويوم)
-•	كأس شاي أخضر
-________________________________________
-🏋️ 8:00 مساءً – التمرين
-________________________________________
-🌙 بعد التمرين – 10:00 مساءً
-•	زبادي أو لبن (حسب المتوفر)
-•	صحن صغير رز مع إدام أو سلطة
-•	ممكن تونة بدل الزبادي بين يوم ويوم، مو شرط يومياً
-________________________________________
-إجمالي يومي تقريبي:
-•	السعرات: 1850–1900 سعرة
-•	البروتين: 130–140 جم (ممتاز يحافظ على عضلاتك)
-•	الكارب: 160–170 جم (معتدل → يساعدك تخسر دهون البطن بدون ضعف)
-•	الدهون: 55–60 جم (دهون صحية متوازنة)
-•	الفيتامينات والمعادن:
-o	فيتامين C ✅ (فواكه + خضار)
-o	ماغنيسيوم ✅ (مكسرات + ورقيات)
-o	كالسيوم ✅ (بيض + زبادي)
-o	أوميغا 3 ❌ ناقص (الحل: سمك/تونة مرتين بالأسبوع أو مكمل)
-o	فيتامين D ❌ ناقص (الحل: شمس 10–15 دقيقة أو مكمل)
-________________________________________
-•	📌 الخلاصة:
-•	الخلاصة: برنامجك ممتاز لحرق دهون البطن والخواصر بدون ما ينشف وجهك أو يخرب شكلك.
-❌ لا ترجع للكرياتين حالياً. ركّز على البروتين من البيض + الدجاج + الزبادي + السمسم والمكسرات.`;
 
 export default function App(): React.ReactElement {
+  // Workout State
   const [log, setLog] = useLocalStorage<WorkoutEntry[]>('workoutLog_categorized_react_v2', []);
-  const [dietPlan, setDietPlan] = useLocalStorage<string>('workoutDietPlan_react_v2', initialDietPlan);
   const [bodyParts, setBodyParts] = useLocalStorage<BodyPart[]>('workout_bodyParts_v2', INITIAL_BODY_PARTS);
   const [exercises, setExercises] = useLocalStorage<Record<BodyPartId, Exercise[]>>('workout_exercises_v2', INITIAL_EXERCISES);
   const [routines, setRoutines] = useLocalStorage<WorkoutRoutine[]>('workoutRoutines_v1', []);
 
+  // Nutrition State
+  const [nutritionGoals, setNutritionGoals] = useLocalStorage<NutritionGoals>('nutritionGoals_v1', INITIAL_NUTRITION_GOALS);
+  const [foodDatabase, setFoodDatabase] = useLocalStorage<FoodItem[]>('foodDatabase_v1', INITIAL_FOOD_DATABASE);
+  const [dailyDietLogs, setDailyDietLogs] = useLocalStorage<DailyDietLog>('dailyDietLogs_v1', INITIAL_DAILY_DIET_LOGS);
+
+  // UI State
   const [showIntro, setShowIntro] = useState(log.length === 0);
   const [activeView, setActiveView] = useState<View>('log');
 
+  // --- WORKOUT HANDLERS ---
   const addEntry = useCallback((entry: Omit<WorkoutEntry, 'id' | 'date' | 'image'>) => {
     const exerciseDetails = exercises[entry.part]?.find(e => e.name === entry.exercise);
     const newEntry: WorkoutEntry = {
@@ -115,21 +74,6 @@ export default function App(): React.ReactElement {
     setLog([]);
     setShowIntro(true);
   }, [setLog]);
-
-  const importData = useCallback((data: { log: WorkoutEntry[], dietPlan: string }) => {
-    try {
-        if (!data || !Array.isArray(data.log) || typeof data.dietPlan !== 'string') {
-            throw new Error("Invalid data structure.");
-        }
-        setLog(data.log);
-        setDietPlan(data.dietPlan);
-        setShowIntro(data.log.length === 0);
-        alert('تم استيراد البيانات بنجاح!');
-    } catch (error) {
-        console.error("Import failed:", error);
-        alert(`فشل الاستيراد: ${error.message}`);
-    }
-  }, [setLog, setDietPlan]);
   
   const addRoutine = useCallback((routine: Omit<WorkoutRoutine, 'id'>) => {
     const newRoutine = { ...routine, id: crypto.randomUUID() };
@@ -143,6 +87,92 @@ export default function App(): React.ReactElement {
   const deleteRoutine = useCallback((id: string) => {
       setRoutines(prev => prev.filter(r => r.id !== id));
   }, [setRoutines]);
+
+  // --- NUTRITION HANDLERS ---
+  const addFoodToDatabase = useCallback((food: Omit<FoodItem, 'id'>) => {
+    const newFood = { ...food, id: crypto.randomUUID() };
+    setFoodDatabase(prev => [...prev, newFood]);
+    return newFood;
+  }, [setFoodDatabase]);
+
+  const updateFoodInDatabase = useCallback((updatedFood: FoodItem) => {
+    setFoodDatabase(prev => prev.map(f => f.id === updatedFood.id ? updatedFood : f));
+  }, [setFoodDatabase]);
+
+  const deleteFoodFromDatabase = useCallback((id: string) => {
+    setFoodDatabase(prev => prev.filter(f => f.id !== id));
+  }, [setFoodDatabase]);
+  
+  const logFood = useCallback((date: string, meal: MealType, foodId: string, servings: number) => {
+    const newLoggedFood: LoggedFood = { id: crypto.randomUUID(), foodId, servings };
+    setDailyDietLogs(prev => {
+        const newLogs = { ...prev };
+        const dayLog = newLogs[date] ? { ...newLogs[date] } : {};
+        const mealLog = dayLog[meal] ? [...dayLog[meal]] : [];
+        mealLog.push(newLoggedFood);
+        dayLog[meal] = mealLog;
+        newLogs[date] = dayLog;
+        return newLogs;
+    });
+  }, [setDailyDietLogs]);
+
+  const removeLoggedFood = useCallback((date: string, meal: MealType, loggedFoodId: string) => {
+    setDailyDietLogs(prev => {
+        const newLogs = { ...prev };
+        if (!newLogs[date] || !newLogs[date][meal]) return prev;
+        
+        const newDayLog = { ...newLogs[date] };
+        newDayLog[meal] = newDayLog[meal]?.filter(food => food.id !== loggedFoodId);
+
+        if (newDayLog[meal]?.length === 0) {
+            delete newDayLog[meal];
+        }
+
+        if (Object.keys(newDayLog).length === 0) {
+             delete newLogs[date];
+        } else {
+             newLogs[date] = newDayLog;
+        }
+
+        return newLogs;
+    });
+  }, [setDailyDietLogs]);
+
+
+  // --- DATA MANAGEMENT (IMPORT/EXPORT) ---
+  const importData = useCallback((data: AppData) => {
+    try {
+        // Basic validation
+        if (!data || typeof data !== 'object') throw new Error("Invalid data file.");
+        if (!Array.isArray(data.log)) throw new Error("Invalid log data.");
+
+        setLog(data.log || []);
+        setBodyParts(data.bodyParts || INITIAL_BODY_PARTS);
+        setExercises(data.exercises || INITIAL_EXERCISES);
+        setRoutines(data.routines || []);
+        setNutritionGoals(data.nutritionGoals || INITIAL_NUTRITION_GOALS);
+        setFoodDatabase(data.foodDatabase || INITIAL_FOOD_DATABASE);
+        setDailyDietLogs(data.dailyDietLogs || INITIAL_DAILY_DIET_LOGS);
+
+        setShowIntro((data.log || []).length === 0);
+        alert('تم استيراد البيانات بنجاح!');
+    } catch (error) {
+        console.error("Import failed:", error);
+        alert(`فشل الاستيراد: ${error instanceof Error ? error.message : "خطأ غير معروف"}`);
+    }
+  }, [setLog, setBodyParts, setExercises, setRoutines, setNutritionGoals, setFoodDatabase, setDailyDietLogs]);
+
+  const exportData = useCallback((): AppData => {
+    return {
+        log,
+        bodyParts,
+        exercises,
+        routines,
+        nutritionGoals,
+        foodDatabase,
+        dailyDietLogs
+    };
+  }, [log, bodyParts, exercises, routines, nutritionGoals, foodDatabase, dailyDietLogs]);
 
 
   return (
@@ -169,7 +199,6 @@ export default function App(): React.ReactElement {
                     onUpdateEntry={updateEntry} 
                     onClearLog={clearLog} 
                     showIntro={showIntro}
-                    onImportData={importData}
                     bodyParts={bodyParts}
                     exercises={exercises}
                    />
@@ -192,7 +221,16 @@ export default function App(): React.ReactElement {
                 exercises={exercises}
               />
            )}
-           {activeView === 'diet' && <DietPage content={dietPlan} onSave={setDietPlan} />}
+           {activeView === 'diet' && (
+              <DietPage 
+                goals={nutritionGoals}
+                foodDatabase={foodDatabase}
+                dailyLogs={dailyDietLogs}
+                onLogFood={logFood}
+                onRemoveLoggedFood={removeLoggedFood}
+                onAddFoodToDatabase={addFoodToDatabase}
+              />
+           )}
            {activeView === 'settings' && (
               <SettingsPage
                 bodyParts={bodyParts}
@@ -203,6 +241,14 @@ export default function App(): React.ReactElement {
                 addRoutine={addRoutine}
                 updateRoutine={updateRoutine}
                 deleteRoutine={deleteRoutine}
+                nutritionGoals={nutritionGoals}
+                setNutritionGoals={setNutritionGoals}
+                foodDatabase={foodDatabase}
+                addFoodToDatabase={addFoodToDatabase}
+                updateFoodInDatabase={updateFoodInDatabase}
+                deleteFoodFromDatabase={deleteFoodFromDatabase}
+                onImportData={importData}
+                onExportData={exportData}
               />
            )}
         </div>

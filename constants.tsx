@@ -1,5 +1,4 @@
-
-import type { BodyPart, BodyPartId, Exercise } from './types';
+import type { BodyPart, BodyPartId, Exercise, NutritionGoals, FoodItem, DailyDietLog } from './types';
 
 export const INITIAL_BODY_PARTS: BodyPart[] = [
     { id: 'upper', name: 'علوي', icon: '💪', color: 'blue', gradient: 'from-blue-500 to-cyan-400' },
@@ -40,3 +39,21 @@ export const INITIAL_EXERCISES: Record<BodyPartId, Exercise[]> = {
     { name: "Cardio Treadmill (مشاية)", image: "https://picsum.photos/seed/treadmill/100/100" }
   ]
 };
+
+
+// Nutrition Constants
+export const INITIAL_NUTRITION_GOALS: NutritionGoals = {
+    calories: 2000,
+    protein: 150,
+    carbs: 200,
+    fat: 65,
+};
+
+export const INITIAL_FOOD_DATABASE: FoodItem[] = [
+    { id: 'food-1', name: 'صدر دجاج', calories: 165, protein: 31, carbs: 0, fat: 3.6, servingSize: '100g' },
+    { id: 'food-2', name: 'رز أبيض', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, servingSize: '100g مطبوخ' },
+    { id: 'food-3', name: 'بيضة مسلوقة', calories: 78, protein: 6, carbs: 0.6, fat: 5, servingSize: '1 كبيرة' },
+    { id: 'food-4', name: 'زيت زيتون', calories: 119, protein: 0, carbs: 0, fat: 13.5, servingSize: '1 ملعقة كبيرة' },
+];
+
+export const INITIAL_DAILY_DIET_LOGS: DailyDietLog = {};

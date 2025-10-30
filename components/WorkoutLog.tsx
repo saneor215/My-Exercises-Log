@@ -1,11 +1,10 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { WorkoutEntry, BodyPartId, BodyPart, Exercise } from '../types';
 import { LogItem } from './LogItem';
 import { Modal } from './Modal';
 import { ImageModal } from './ImageModal';
 import { EditWorkoutModal } from './EditWorkoutModal';
-import { ClearIcon, CsvIcon, ActivityIcon, ImportIcon, ExportIcon } from './Icons';
+import { ClearIcon, CsvIcon, ActivityIcon } from './Icons';
 
 interface WorkoutLogProps {
   log: WorkoutEntry[];
@@ -13,19 +12,15 @@ interface WorkoutLogProps {
   onUpdateEntry: (entry: WorkoutEntry) => void;
   onClearLog: () => void;
   showIntro: boolean;
-  onImportData: (data: { log: WorkoutEntry[]; dietPlan: string }) => void;
   bodyParts: BodyPart[];
   exercises: Record<BodyPartId, Exercise[]>;
 }
 
-export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUpdateEntry, onClearLog, showIntro, onImportData, bodyParts, exercises }) => {
+export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUpdateEntry, onClearLog, showIntro, bodyParts, exercises }) => {
   const [partFilter, setPartFilter] = useState<BodyPartId | 'all'>('all');
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<WorkoutEntry | null>(null);
   const [viewingImage, setViewingImage] = useState<{src: string; alt: string} | null>(null);
-  const importedDataRef = useRef<null | { log: WorkoutEntry[]; dietPlan: string }>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validLog = useMemo(() => {
     return log.filter(entry => 
@@ -86,87 +81,6 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
     setEditingEntry(null);
   };
 
-  const handleExport = () => {
-    try {
-      const dietPlan = window.localStorage.getItem('workoutDietPlan_react');
-      
-      if (log.length === 0 && (!dietPlan || dietPlan === '""')) {
-        alert("لا توجد بيانات للتصدير.");
-        return;
-      }
-
-      const dataToExport = {
-        log: log,
-        dietPlan: dietPlan ? JSON.parse(dietPlan) : '',
-      };
-
-      const jsonString = JSON.stringify(dataToExport, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const timestamp = new Date().toISOString().slice(0, 10);
-      link.download = `workout-log-backup-${timestamp}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      alert("حدث خطأ أثناء تصدير البيانات.");
-    }
-  };
-  
-  const triggerImport = () => {
-    fileInputRef.current?.click();
-  };
-  
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result;
-        if (typeof text !== 'string') throw new Error("محتوى الملف غير نصي.");
-        const data = JSON.parse(text);
-
-        if (data && typeof data.dietPlan === 'string' && Array.isArray(data.log)) {
-          if (data.log.length > 0) {
-             const firstItem = data.log[0];
-             if (typeof firstItem.id !== 'string' || typeof firstItem.exercise !== 'string' || typeof firstItem.weight !== 'number') {
-                throw new Error("بنية بيانات السجل غير صالحة.");
-             }
-          }
-          importedDataRef.current = data;
-          setIsImportModalOpen(true);
-        } else {
-          throw new Error("بنية الملف غير صالحة.");
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "حدث خطأ غير معروف";
-        console.error("Error importing file:", error);
-        alert(`فشل استيراد الملف. تأكد من أنه ملف JSON صالح. الخطأ: ${errorMessage}`);
-      } finally {
-        if (event.target) event.target.value = '';
-      }
-    };
-    reader.onerror = () => {
-      alert('فشل قراءة الملف.');
-      if (event.target) event.target.value = '';
-    };
-    reader.readAsText(file);
-  };
-  
-  const confirmImport = () => {
-    if (importedDataRef.current) {
-      onImportData(importedDataRef.current);
-    }
-    setIsImportModalOpen(false);
-    importedDataRef.current = null;
-  };
-
   const exportCSV = () => {
     if (validLog.length === 0) {
       alert("لا يوجد بيانات للتصدير");
@@ -200,14 +114,6 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
 
   return (
     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10 h-full flex flex-col">
-       <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileSelect}
-        accept=".json"
-        className="hidden"
-        aria-hidden="true"
-      />
       <h3 className="text-2xl font-bold mb-4 text-gray-200">📊 السجل</h3>
       
       {validLog.length > 0 && (
@@ -257,13 +163,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
                     </div>
                 </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 pt-2">
-                <button onClick={handleExport} className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-3 rounded-lg transition-all duration-300 shadow-md">
-                    <ExportIcon className="w-5 h-5"/> <span>تصدير</span>
-                </button>
-                <button onClick={triggerImport} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 rounded-lg transition-all duration-300 shadow-md">
-                    <ImportIcon className="w-5 h-5"/> <span>استيراد</span>
-                </button>
+            <div className="grid grid-cols-2 gap-2 pt-2">
                 <button onClick={exportCSV} className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-3 rounded-lg transition-all duration-300 shadow-md">
                     <CsvIcon className="w-5 h-5"/> <span>CSV</span>
                 </button>
@@ -310,17 +210,6 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
         <p>هل أنت متأكد أنك تريد مسح جميع سجلات التمارين؟ لا يمكن التراجع عن هذا الإجراء.</p>
       </Modal>
 
-      <Modal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onConfirm={confirmImport}
-        title="تأكيد استيراد البيانات"
-        confirmText="نعم، استبدل البيانات الحالية"
-        cancelText="إلغاء"
-      >
-        <p>سيؤدي هذا إلى استبدال جميع بياناتك الحالية (السجل والنظام الغذائي) بالبيانات الموجودة في الملف. هل تريد المتابعة؟</p>
-      </Modal>
-      
       {viewingImage && (
         <ImageModal 
             src={viewingImage.src}
