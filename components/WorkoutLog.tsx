@@ -1,11 +1,10 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import type { WorkoutEntry, BodyPartId } from '../types';
+import type { WorkoutEntry, BodyPartId, BodyPart, Exercise } from '../types';
 import { LogItem } from './LogItem';
 import { Modal } from './Modal';
 import { ImageModal } from './ImageModal';
 import { EditWorkoutModal } from './EditWorkoutModal';
-import { BODY_PARTS } from '../constants';
 import { ClearIcon, CsvIcon, ActivityIcon, ImportIcon, ExportIcon } from './Icons';
 
 interface WorkoutLogProps {
@@ -15,9 +14,11 @@ interface WorkoutLogProps {
   onClearLog: () => void;
   showIntro: boolean;
   onImportData: (data: { log: WorkoutEntry[]; dietPlan: string }) => void;
+  bodyParts: BodyPart[];
+  exercises: Record<BodyPartId, Exercise[]>;
 }
 
-export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUpdateEntry, onClearLog, showIntro, onImportData }) => {
+export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUpdateEntry, onClearLog, showIntro, onImportData, bodyParts, exercises }) => {
   const [partFilter, setPartFilter] = useState<BodyPartId | 'all'>('all');
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -159,7 +160,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
     }
     const headers = ["الأسبوع", "الجزء", "التمرين", "الوزن (كجم)", "التكرارات", "التاريخ", "تعليق"];
     const rows = log.map(entry => {
-        const partName = BODY_PARTS.find(p => p.id === entry.part)?.name || entry.part;
+        const partName = bodyParts.find(p => p.id === entry.part)?.name || entry.part;
         return [
             entry.week,
             partName, 
@@ -209,7 +210,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
               >
                 الكل
               </button>
-              {BODY_PARTS.map(part => (
+              {bodyParts.map(part => (
                 <button
                   key={part.id}
                   onClick={() => setPartFilter(part.id)}
@@ -270,7 +271,8 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
             {filteredLog.length > 0 ? filteredLog.map(entry => (
                 <LogItem 
                     key={entry.id} 
-                    entry={entry} 
+                    entry={entry}
+                    bodyParts={bodyParts}
                     onDelete={onDeleteEntry}
                     onEditRequest={setEditingEntry}
                     onImageClick={setViewingImage}
@@ -318,6 +320,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
             entry={editingEntry}
             onUpdate={handleUpdate}
             onClose={() => setEditingEntry(null)}
+            exercises={exercises}
         />
       )}
     </div>

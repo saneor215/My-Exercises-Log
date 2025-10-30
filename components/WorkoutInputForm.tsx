@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { WorkoutEntry, BodyPartId } from '../types';
-import { BODY_PARTS, EXERCISES } from '../constants';
+import type { WorkoutEntry, BodyPartId, BodyPart, Exercise } from '../types';
 import { SaveIcon, ClockIcon } from './Icons';
 
 interface WorkoutInputFormProps {
   onAddEntry: (entry: Omit<WorkoutEntry, 'id' | 'date' | 'image'>) => void;
+  bodyParts: BodyPart[];
+  exercises: Record<BodyPartId, Exercise[]>;
 }
 
 const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }> = ({ children, ...props }) => (
@@ -22,7 +23,7 @@ const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { c
 );
 
 
-export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry }) => {
+export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, bodyParts, exercises }) => {
   const [selectedPart, setSelectedPart] = useState<BodyPartId | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
@@ -36,16 +37,16 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry }
   
   const exerciseImage = useMemo(() => {
     if (!selectedPart || !selectedExercise) return null;
-    return EXERCISES[selectedPart].find(ex => ex.name === selectedExercise)?.image;
-  }, [selectedPart, selectedExercise]);
+    return exercises[selectedPart]?.find(ex => ex.name === selectedExercise)?.image;
+  }, [selectedPart, selectedExercise, exercises]);
 
   useEffect(() => {
     if (selectedPart) {
-      setSelectedExercise(EXERCISES[selectedPart][0]?.name || '');
+      setSelectedExercise(exercises[selectedPart]?.[0]?.name || '');
     } else {
       setSelectedExercise('');
     }
-  }, [selectedPart]);
+  }, [selectedPart, exercises]);
 
   useEffect(() => {
     if (!isTimerRunning) return;
@@ -117,7 +118,7 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry }
         <div>
           <label className="block text-lg font-medium text-gray-300 mb-3">اختر الجزء:</label>
           <div className="grid grid-cols-3 gap-3">
-            {BODY_PARTS.map((part) => (
+            {bodyParts.map((part) => (
               <button
                 type="button"
                 key={part.id}
@@ -138,10 +139,14 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry }
             <>
                 <div>
                     <label htmlFor="exercise-select" className="block text-sm font-medium text-gray-300 mb-2">التمرين</label>
-                    <CustomSelect id="exercise-select" value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)}>
-                        {EXERCISES[selectedPart].map((ex) => (
-                            <option key={ex.name} value={ex.name}>{ex.name}</option>
-                        ))}
+                    <CustomSelect id="exercise-select" value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} disabled={!exercises[selectedPart] || exercises[selectedPart].length === 0}>
+                        {exercises[selectedPart] && exercises[selectedPart].length > 0 ? (
+                           exercises[selectedPart].map((ex) => (
+                                <option key={ex.name} value={ex.name}>{ex.name}</option>
+                            ))
+                        ) : (
+                            <option>لا توجد تمارين لهذا الجزء</option>
+                        )}
                     </CustomSelect>
                 </div>
 
@@ -229,7 +234,7 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry }
                     </button>
                     <button
                         type="submit"
-                        disabled={!selectedPart}
+                        disabled={!selectedPart || !exercises[selectedPart] || exercises[selectedPart].length === 0}
                         className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-400"
                     >
                         <SaveIcon className="w-5 h-5" />

@@ -1,8 +1,8 @@
 import React from 'react';
-import { ActivityIcon, CalendarIcon, ChartBarIcon, ClipboardListIcon } from './Icons';
+import { ActivityIcon, CalendarIcon, ChartBarIcon, ClipboardListIcon, SettingsIcon } from './Icons';
 import { Logo } from './Logo';
+import type { View } from '../types';
 
-type View = 'log' | 'calendar' | 'progress' | 'diet';
 
 interface NavigationProps {
     activeView: View;
@@ -14,6 +14,7 @@ const navItems: { id: View; label: string; icon: React.FC<React.SVGProps<SVGSVGE
     { id: 'calendar', label: 'التقويم', icon: CalendarIcon },
     { id: 'diet', label: 'البرنامج الغذائي', icon: ClipboardListIcon },
     { id: 'progress', label: 'التقدم', icon: ChartBarIcon },
+    { id: 'settings', label: 'الإعدادات', icon: SettingsIcon },
 ];
 
 export const Navigation: React.FC<NavigationProps> = ({ activeView, onNavigate }) => {

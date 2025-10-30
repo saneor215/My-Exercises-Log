@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { WorkoutEntry } from '../types';
+import type { WorkoutEntry, BodyPart, Exercise, BodyPartId } from '../types';
 import { CalendarView } from './CalendarView';
 import { LogItem } from './LogItem';
 import { EditWorkoutModal } from './EditWorkoutModal';
@@ -10,9 +10,11 @@ interface CalendarPageProps {
   log: WorkoutEntry[];
   onDeleteEntry: (id: string) => void;
   onUpdateEntry: (entry: WorkoutEntry) => void;
+  bodyParts: BodyPart[];
+  exercises: Record<BodyPartId, Exercise[]>;
 }
 
-export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, onUpdateEntry }) => {
+export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, onUpdateEntry, bodyParts, exercises }) => {
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [editingEntry, setEditingEntry] = useState<WorkoutEntry | null>(null);
     const [viewingImage, setViewingImage] = useState<{src: string; alt: string} | null>(null);
@@ -72,7 +74,8 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
                             filteredLog.map(entry => (
                                 <LogItem 
                                     key={entry.id} 
-                                    entry={entry} 
+                                    entry={entry}
+                                    bodyParts={bodyParts}
                                     onDelete={onDeleteEntry}
                                     onEditRequest={setEditingEntry}
                                     onImageClick={setViewingImage}
@@ -99,6 +102,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
                     entry={editingEntry}
                     onUpdate={handleUpdate}
                     onClose={() => setEditingEntry(null)}
+                    exercises={exercises}
                 />
             )}
         </div>

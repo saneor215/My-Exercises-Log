@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import type { WorkoutEntry } from '../types';
-import { EXERCISES } from '../constants';
+import React, { useState } from 'react';
+import type { WorkoutEntry, Exercise, BodyPartId } from '../types';
 
 interface EditWorkoutModalProps {
   entry: WorkoutEntry;
   onUpdate: (updatedEntry: WorkoutEntry) => void;
   onClose: () => void;
+  exercises: Record<BodyPartId, Exercise[]>;
 }
 
-export const EditWorkoutModal: React.FC<EditWorkoutModalProps> = ({ entry, onUpdate, onClose }) => {
+export const EditWorkoutModal: React.FC<EditWorkoutModalProps> = ({ entry, onUpdate, onClose, exercises }) => {
   const [exercise, setExercise] = useState(entry.exercise);
   const [weight, setWeight] = useState(String(entry.weight));
   const [reps, setReps] = useState(String(entry.reps));
   const [week, setWeek] = useState(String(entry.week));
   const [comment, setComment] = useState(entry.comment || '');
   
-  const availableExercises = EXERCISES[entry.part];
+  const availableExercises = exercises[entry.part] || [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

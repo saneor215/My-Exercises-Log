@@ -1,17 +1,17 @@
 import React from 'react';
-import type { WorkoutEntry } from '../types';
-import { BODY_PARTS } from '../constants';
+import type { WorkoutEntry, BodyPart } from '../types';
 import { TrashIcon, PencilIcon, CalendarIcon } from './Icons';
 
 interface LogItemProps {
   entry: WorkoutEntry;
+  bodyParts: BodyPart[];
   onDelete: (id: string) => void;
   onEditRequest: (entry: WorkoutEntry) => void;
   onImageClick: (image: {src: string; alt: string}) => void;
 }
 
-export const LogItem: React.FC<LogItemProps> = ({ entry, onDelete, onEditRequest, onImageClick }) => {
-  const partInfo = BODY_PARTS.find(p => p.id === entry.part);
+export const LogItem: React.FC<LogItemProps> = ({ entry, bodyParts, onDelete, onEditRequest, onImageClick }) => {
+  const partInfo = bodyParts.find(p => p.id === entry.part);
 
   const formattedDate = new Date(entry.date).toLocaleDateString('ar-EG', {
     day: 'numeric',

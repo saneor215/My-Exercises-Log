@@ -1,4 +1,6 @@
-export type BodyPartId = 'upper' | 'lower' | 'friday';
+export type BodyPartId = 'upper' | 'lower' | 'friday' | string;
+
+export type View = 'log' | 'calendar' | 'progress' | 'diet' | 'settings';
 
 export interface BodyPart {
     id: BodyPartId;

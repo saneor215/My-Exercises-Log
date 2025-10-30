@@ -1,13 +1,13 @@
 
 import type { BodyPart, BodyPartId, Exercise } from './types';
 
-export const BODY_PARTS: BodyPart[] = [
+export const INITIAL_BODY_PARTS: BodyPart[] = [
     { id: 'upper', name: 'علوي', icon: '🟦', color: 'blue', gradient: 'from-blue-500 to-cyan-400' },
     { id: 'lower', name: 'سفلي', icon: '🟩', color: 'green', gradient: 'from-green-500 to-lime-400' },
     { id: 'friday', name: 'معدة', icon: '🟨', color: 'yellow', gradient: 'from-yellow-500 to-amber-400' }
 ];
 
-export const EXERCISES: Record<BodyPartId, Exercise[]> = {
+export const INITIAL_EXERCISES: Record<BodyPartId, Exercise[]> = {
   upper: [
     { name: "Lat Pulldown (ظهر1)", image: "https://picsum.photos/seed/latpulldown/100/100" },
     { name: "Seated Row (ظهر2)", image: "https://picsum.photos/seed/seatedrow/100/100" },

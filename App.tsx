@@ -3,13 +3,14 @@ import React, { useState, useCallback } from 'react';
 import { WorkoutInputForm } from './components/WorkoutInputForm';
 import { WorkoutLog } from './components/WorkoutLog';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { WorkoutEntry } from './types';
-import { EXERCISES } from './constants';
+import type { WorkoutEntry, BodyPart, Exercise, BodyPartId } from './types';
+import { INITIAL_EXERCISES, INITIAL_BODY_PARTS } from './constants';
 import { Navigation } from './components/Navigation';
 import { CalendarPage } from './components/CalendarPage';
 import { DietPage } from './components/DietPage';
+import { SettingsPage } from './components/SettingsPage';
 
-type View = 'log' | 'calendar' | 'progress' | 'diet';
+type View = 'log' | 'calendar' | 'progress' | 'diet' | 'settings';
 
 const initialDietPlan = `برنامجك الغذائي (النسخة الأخف – 1850–1900 سعرة)
 ________________________________________
@@ -60,13 +61,16 @@ ________________________________________
 ❌ لا ترجع للكرياتين حالياً. ركّز على البروتين من البيض + الدجاج + الزبادي + السمسم والمكسرات.`;
 
 export default function App(): React.ReactElement {
-  const [log, setLog] = useLocalStorage<WorkoutEntry[]>('workoutLog_categorized_react', []);
-  const [dietPlan, setDietPlan] = useLocalStorage<string>('workoutDietPlan_react', initialDietPlan);
+  const [log, setLog] = useLocalStorage<WorkoutEntry[]>('workoutLog_categorized_react_v2', []);
+  const [dietPlan, setDietPlan] = useLocalStorage<string>('workoutDietPlan_react_v2', initialDietPlan);
+  const [bodyParts, setBodyParts] = useLocalStorage<BodyPart[]>('workout_bodyParts_v2', INITIAL_BODY_PARTS);
+  const [exercises, setExercises] = useLocalStorage<Record<BodyPartId, Exercise[]>>('workout_exercises_v2', INITIAL_EXERCISES);
+
   const [showIntro, setShowIntro] = useState(log.length === 0);
   const [activeView, setActiveView] = useState<View>('log');
 
   const addEntry = useCallback((entry: Omit<WorkoutEntry, 'id' | 'date' | 'image'>) => {
-    const exerciseDetails = EXERCISES[entry.part]?.find(e => e.name === entry.exercise);
+    const exerciseDetails = exercises[entry.part]?.find(e => e.name === entry.exercise);
     const newEntry: WorkoutEntry = {
       ...entry,
       id: crypto.randomUUID(),
@@ -75,7 +79,7 @@ export default function App(): React.ReactElement {
     };
     setLog(prevLog => [newEntry, ...prevLog]);
     setShowIntro(false);
-  }, [setLog]);
+  }, [setLog, exercises]);
 
   const deleteEntry = useCallback((id: string) => {
     setLog(prevLog => {
@@ -120,7 +124,11 @@ export default function App(): React.ReactElement {
            {activeView === 'log' && (
              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 <div className="lg:col-span-2">
-                  <WorkoutInputForm onAddEntry={addEntry} />
+                  <WorkoutInputForm 
+                    onAddEntry={addEntry}
+                    bodyParts={bodyParts}
+                    exercises={exercises}
+                  />
                 </div>
                 <div className="lg:col-span-3">
                   <WorkoutLog 
@@ -130,6 +138,8 @@ export default function App(): React.ReactElement {
                     onClearLog={clearLog} 
                     showIntro={showIntro}
                     onImportData={importData}
+                    bodyParts={bodyParts}
+                    exercises={exercises}
                    />
                 </div>
               </div>
@@ -139,10 +149,20 @@ export default function App(): React.ReactElement {
                 log={log} 
                 onDeleteEntry={deleteEntry} 
                 onUpdateEntry={updateEntry}
+                bodyParts={bodyParts}
+                exercises={exercises}
               />
            )}
            {activeView === 'progress' && <div className="text-center p-10 bg-gray-800 rounded-xl">صفحة التقدم قيد الإنشاء...</div>}
            {activeView === 'diet' && <DietPage content={dietPlan} onSave={setDietPlan} />}
+           {activeView === 'settings' && (
+              <SettingsPage
+                bodyParts={bodyParts}
+                setBodyParts={setBodyParts}
+                exercises={exercises}
+                setExercises={setExercises}
+              />
+           )}
         </div>
       </div>
     </div>
