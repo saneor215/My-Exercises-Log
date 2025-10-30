@@ -66,7 +66,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
 
             {selectedDate && (
                 <div className="bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
-                    <h3 className="font-bold text-xl text-gray-200 mb-4">
+                    <h3 className="font-bold text-xl mb-4 bg-gradient-to-r from-teal-300 to-cyan-400 bg-clip-text text-transparent">
                         تمارين يوم: {formattedSelectedDate}
                     </h3>
                     <div className="space-y-4">

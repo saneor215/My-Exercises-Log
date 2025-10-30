@@ -74,7 +74,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ log, selectedDate, o
     <div className="bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
       <div className="flex items-center justify-between mb-4">
         <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-gray-700 transition-colors"><ChevronRightIcon className="w-6 h-6" /></button>
-        <h3 className="font-bold text-xl text-white">
+        <h3 className="font-bold text-xl bg-gradient-to-r from-sky-300 to-violet-400 bg-clip-text text-transparent">
           {displayDate.toLocaleString('ar-EG', { month: 'long', year: 'numeric', calendar: 'gregory' })}
         </h3>
         <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-700 transition-colors"><ChevronLeftIcon className="w-6 h-6" /></button>

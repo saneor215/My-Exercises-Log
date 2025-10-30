@@ -39,7 +39,7 @@ export const DietPage: React.FC<DietPageProps> = ({ content, onSave }) => {
   return (
     <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-lg ring-1 ring-white/10">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white">البرنامج الغذائي</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-lime-300 bg-clip-text text-transparent">البرنامج الغذائي</h2>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
