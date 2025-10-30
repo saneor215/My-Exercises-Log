@@ -26,3 +26,14 @@ export interface WorkoutEntry {
     comment?: string;
     week: number;
 }
+
+export interface RoutineExercise {
+    partId: BodyPartId;
+    exerciseName: string;
+}
+
+export interface WorkoutRoutine {
+    id: string;
+    name: string;
+    exercises: RoutineExercise[];
+}

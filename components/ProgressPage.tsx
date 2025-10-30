@@ -12,35 +12,50 @@ interface ProgressPageProps {
 const StatCard: React.FC<{ title: string; value: string; subtext?: string; className?: string }> = ({ title, value, subtext, className }) => (
     <div className={`bg-gray-800 p-4 rounded-xl ring-1 ring-white/10 ${className}`}>
         <h3 className="text-sm font-medium text-gray-400">{title}</h3>
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className={`text-2xl font-bold text-white ${className}`}>{value}</p>
         {subtext && <p className="text-xs text-gray-500">{subtext}</p>}
     </div>
 );
 
 export const ProgressPage: React.FC<ProgressPageProps> = ({ log, bodyParts, exercises }) => {
     const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+
+    const validLog = useMemo(() => {
+        return log.filter(entry => 
+            entry && 
+            typeof entry === 'object' &&
+            typeof entry.exercise === 'string' &&
+            typeof entry.weight === 'number' &&
+            typeof entry.date === 'string' &&
+            typeof entry.reps === 'number' &&
+            typeof entry.week === 'number'
+        );
+    }, [log]);
     
     const loggedExercises = useMemo(() => {
-        return [...new Set(log.map(entry => entry.exercise))].sort();
-    }, [log]);
+        return [...new Set(validLog.map(entry => entry.exercise))].sort();
+    }, [validLog]);
     
     useEffect(() => {
         if (!selectedExercise && loggedExercises.length > 0) {
             setSelectedExercise(loggedExercises[0]);
         }
+         if (selectedExercise && !loggedExercises.includes(selectedExercise)) {
+            setSelectedExercise(loggedExercises.length > 0 ? loggedExercises[0] : null);
+        }
     }, [loggedExercises, selectedExercise]);
     
     const chartData = useMemo(() => {
         if (!selectedExercise) return [];
-        return log
+        return validLog
             .filter(e => e.exercise === selectedExercise)
             .map(e => ({ date: new Date(e.date), weight: e.weight, reps: e.reps }))
             .sort((a, b) => a.date.getTime() - b.date.getTime());
-    }, [log, selectedExercise]);
+    }, [validLog, selectedExercise]);
 
     const personalRecords = useMemo(() => {
         const prs: { [key: string]: WorkoutEntry } = {};
-        log.forEach(entry => {
+        validLog.forEach(entry => {
             if (!prs[entry.exercise] || entry.weight > prs[entry.exercise].weight) {
                 prs[entry.exercise] = entry;
             }
@@ -50,37 +65,42 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({ log, bodyParts, exer
              const partB = bodyParts.find(p => p.id === b.part)?.name || '';
              return partA.localeCompare(partB) || a.exercise.localeCompare(b.exercise)
         });
-    }, [log, bodyParts]);
+    }, [validLog, bodyParts]);
 
     const overallStats = useMemo(() => {
-        const totalWorkouts = log.length;
-        const heaviestLift = totalWorkouts > 0 ? Math.max(...log.map(e => e.weight)) : 0;
+        const totalWorkouts = validLog.length;
+        const heaviestLift = totalWorkouts > 0 ? Math.max(...validLog.map(e => e.weight)) : 0;
         return { totalWorkouts, heaviestLift };
-    }, [log]);
+    }, [validLog]);
 
     const exerciseStats = useMemo(() => {
         if (chartData.length === 0) return null;
         const pr = Math.max(...chartData.map(d => d.weight));
 
-        const latestWeek = Math.max(...log.map(e => e.week));
-        const currentWeekData = chartData.filter(d => new Date(d.date).getFullYear() === new Date().getFullYear() && log.find(e => new Date(e.date).getTime() === d.date.getTime())?.week === latestWeek);
-        const prevWeekData = chartData.filter(d => new Date(d.date).getFullYear() === new Date().getFullYear() && log.find(e => new Date(e.date).getTime() === d.date.getTime())?.week === latestWeek - 1);
+        const latestWeekEntry = validLog.reduce((latest, entry) => (!latest || entry.week > latest.week) ? entry : latest, null as WorkoutEntry | null);
+        const latestWeek = latestWeekEntry ? latestWeekEntry.week : 0;
         
-        const currentVolume = currentWeekData.reduce((sum, d) => sum + (d.weight * d.reps), 0);
-        const prevVolume = prevWeekData.reduce((sum, d) => sum + (d.weight * d.reps), 0);
+        const getVolumeForWeek = (weekNum: number) => {
+            return validLog
+                .filter(e => e.exercise === selectedExercise && e.week === weekNum)
+                .reduce((sum, d) => sum + (d.weight * d.reps), 0);
+        }
+
+        const currentVolume = getVolumeForWeek(latestWeek);
+        const prevVolume = getVolumeForWeek(latestWeek - 1);
 
         let volumeChange = 0;
         if (prevVolume > 0) {
             volumeChange = ((currentVolume - prevVolume) / prevVolume) * 100;
         } else if (currentVolume > 0) {
-            volumeChange = 100;
+            volumeChange = 100; // If there was no volume before, any new volume is 100% increase
         }
 
         return { pr, currentVolume, volumeChange };
 
-    }, [chartData, log]);
+    }, [chartData, validLog, selectedExercise]);
 
-    if (log.length === 0) {
+    if (validLog.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 p-8 border-2 border-dashed border-gray-700 rounded-xl bg-gray-800">
                 <ActivityIcon className="w-16 h-16 mb-4"/>
@@ -123,11 +143,11 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({ log, bodyParts, exer
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <StatCard title="الرقم القياسي (PR)" value={`${exerciseStats?.pr.toLocaleString('ar-EG') || 0} كجم`} subtext="أثقل وزن مسجل لهذا التمرين" />
-                            <StatCard title="حجم التمرين (هذا الأسبوع)" value={`${exerciseStats?.currentVolume.toLocaleString('ar-EG') || 0}`} subtext="الوزن × التكرارات" />
+                            <StatCard title="حجم التمرين (آخر أسبوع)" value={`${exerciseStats?.currentVolume.toLocaleString('ar-EG') || 0}`} subtext="الوزن × التكرارات" />
                             <StatCard 
                                 title="التغير عن الأسبوع الماضي" 
                                 value={`${exerciseStats?.volumeChange.toFixed(0) || 0}%`}
-                                className={exerciseStats?.volumeChange > 0 ? 'text-green-400' : exerciseStats?.volumeChange < 0 ? 'text-red-400' : ''} 
+                                className={exerciseStats && exerciseStats.volumeChange > 0 ? 'text-green-400' : exerciseStats && exerciseStats.volumeChange < 0 ? 'text-red-400' : ''} 
                             />
                         </div>
                         <div className="h-96">

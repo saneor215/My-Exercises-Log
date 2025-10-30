@@ -27,40 +27,54 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
   const importedDataRef = useRef<null | { log: WorkoutEntry[]; dietPlan: string }>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const availableWeeks = useMemo(() => {
-    return Array.from(new Set(log.map(entry => entry.week))).sort((a, b) => Number(a) - Number(b));
+  const validLog = useMemo(() => {
+    return log.filter(entry => 
+        entry && 
+        typeof entry === 'object' &&
+        entry.id &&
+        entry.part &&
+        entry.exercise &&
+        typeof entry.weight === 'number' &&
+        typeof entry.reps === 'number' &&
+        typeof entry.week === 'number' &&
+        entry.date
+    );
   }, [log]);
+
+  const availableWeeks = useMemo(() => {
+    return Array.from(new Set(validLog.map(entry => entry.week))).sort((a, b) => Number(a) - Number(b));
+  }, [validLog]);
   
   const [weekFilter, setWeekFilter] = useState<'all' | string>(() => {
-    if (log.length > 0) {
-      return String(Math.max(...log.map(entry => entry.week)));
+    if (validLog.length > 0) {
+      return String(Math.max(...validLog.map(entry => entry.week)));
     }
     return 'all';
   });
 
-  const prevLogLengthRef = useRef(log.length);
+  const prevLogLengthRef = useRef(validLog.length);
 
   useEffect(() => {
     const latestWeek = availableWeeks.length > 0 ? String(availableWeeks[availableWeeks.length - 1]) : null;
 
-    const logJustPopulated = prevLogLengthRef.current === 0 && log.length > 0;
+    const logJustPopulated = prevLogLengthRef.current === 0 && validLog.length > 0;
     const isFilterStale = weekFilter !== 'all' && !availableWeeks.map(String).includes(weekFilter);
 
     if (logJustPopulated || isFilterStale) {
       setWeekFilter(latestWeek || 'all');
     }
 
-    prevLogLengthRef.current = log.length;
-  }, [log, weekFilter, availableWeeks]);
+    prevLogLengthRef.current = validLog.length;
+  }, [validLog, weekFilter, availableWeeks]);
 
 
   const filteredLog = useMemo(() => {
-    return log.filter(entry => {
+    return validLog.filter(entry => {
         const partMatch = partFilter === 'all' || entry.part === partFilter;
         const weekMatch = weekFilter === 'all' || entry.week.toString() === weekFilter;
         return partMatch && weekMatch;
     });
-  }, [log, partFilter, weekFilter]);
+  }, [validLog, partFilter, weekFilter]);
 
   const handleClear = () => {
     onClearLog();
@@ -154,12 +168,12 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
   };
 
   const exportCSV = () => {
-    if (log.length === 0) {
+    if (validLog.length === 0) {
       alert("لا يوجد بيانات للتصدير");
       return;
     }
     const headers = ["الأسبوع", "الجزء", "التمرين", "الوزن (كجم)", "التكرارات", "التاريخ", "تعليق"];
-    const rows = log.map(entry => {
+    const rows = validLog.map(entry => {
         const partName = bodyParts.find(p => p.id === entry.part)?.name || entry.part;
         return [
             entry.week,
@@ -196,7 +210,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
       />
       <h3 className="text-2xl font-bold mb-4 text-gray-200">📊 السجل</h3>
       
-      {log.length > 0 && (
+      {validLog.length > 0 && (
           <div className="space-y-4 mb-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-gray-400 mr-2">فلترة الجزء:</span>
@@ -260,7 +274,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
           </div>
       )}
 
-      {showIntro ? (
+      {showIntro || validLog.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 p-8 border-2 border-dashed border-gray-700 rounded-xl">
             <ActivityIcon className="w-16 h-16 mb-4"/>
             <h4 className="text-xl font-bold text-gray-400">السجل فارغ</h4>

@@ -1,13 +1,18 @@
 import React, { useState, useRef } from 'react';
-import type { BodyPart, Exercise, BodyPartId } from '../types';
+import type { BodyPart, Exercise, BodyPartId, WorkoutRoutine } from '../types';
 import { TrashIcon, XIcon } from './Icons';
 import { Modal } from './Modal';
+import { ManageRoutineModal } from './ManageRoutineModal';
 
 interface SettingsPageProps {
   bodyParts: BodyPart[];
   setBodyParts: React.Dispatch<React.SetStateAction<BodyPart[]>>;
   exercises: Record<BodyPartId, Exercise[]>;
   setExercises: React.Dispatch<React.SetStateAction<Record<BodyPartId, Exercise[]>>>;
+  routines: WorkoutRoutine[];
+  addRoutine: (routine: Omit<WorkoutRoutine, 'id'>) => void;
+  updateRoutine: (routine: WorkoutRoutine) => void;
+  deleteRoutine: (id: string) => void;
 }
 
 const COLOR_SCHEMES = [
@@ -143,10 +148,13 @@ const ManagePartModal: React.FC<{
 };
 
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ bodyParts, setBodyParts, exercises, setExercises }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ bodyParts, setBodyParts, exercises, setExercises, routines, addRoutine, updateRoutine, deleteRoutine }) => {
     const [newPartName, setNewPartName] = useState('');
     const [managingPart, setManagingPart] = useState<BodyPart | null>(null);
     const [partToDelete, setPartToDelete] = useState<BodyPart | null>(null);
+    const [managingRoutine, setManagingRoutine] = useState<WorkoutRoutine | 'new' | null>(null);
+    const [routineToDelete, setRoutineToDelete] = useState<WorkoutRoutine | null>(null);
+
 
     const handleAddPart = () => {
         if (!newPartName.trim()) {
@@ -214,6 +222,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ bodyParts, setBodyPa
             return newExercises;
         });
     };
+    
+    const confirmDeleteRoutine = () => {
+        if (!routineToDelete) return;
+        deleteRoutine(routineToDelete.id);
+        setRoutineToDelete(null);
+    };
 
 
     return (
@@ -252,6 +266,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ bodyParts, setBodyPa
                 </div>
             </div>
 
+            <div className="pt-8 border-t border-gray-700 space-y-4">
+                <h2 className="text-3xl font-bold text-white mb-4">خطط التمارين</h2>
+                <p className="text-gray-400">أنشئ خططًا تدريبية كاملة للوصول السريع إليها في يوم التمرين.</p>
+                
+                <div className="space-y-3">
+                    {routines.map(routine => (
+                        <div key={routine.id} className="bg-gray-700/50 p-4 rounded-lg flex items-center justify-between">
+                            <span className="font-bold text-lg text-white">{routine.name}</span>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setManagingRoutine(routine)} className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg text-sm">تعديل</button>
+                                <button onClick={() => setRoutineToDelete(routine)} className="p-2 rounded-full bg-red-600/80 hover:bg-red-500 text-white"><TrashIcon className="w-5 h-5" /></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="pt-4">
+                    <button onClick={() => setManagingRoutine('new')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg">
+                        إنشاء خطة جديدة
+                    </button>
+                </div>
+            </div>
+
             {managingPart && (
                 <ManagePartModal
                     part={managingPart}
@@ -261,6 +298,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ bodyParts, setBodyPa
                     onUpdateExercise={(index, updatedEx) => handleExerciseUpdate(managingPart.id, index, updatedEx)}
                     onAddExercise={(newEx) => handleExerciseAdd(managingPart.id, newEx)}
                     onDeleteExercise={(index) => handleExerciseDelete(managingPart.id, index)}
+                />
+            )}
+            
+            {managingRoutine && (
+                <ManageRoutineModal
+                    isOpen={!!managingRoutine}
+                    onClose={() => setManagingRoutine(null)}
+                    routineToEdit={managingRoutine === 'new' ? undefined : managingRoutine}
+                    bodyParts={bodyParts}
+                    exercises={exercises}
+                    onSave={(routineData) => {
+                        if (managingRoutine === 'new') {
+                            addRoutine(routineData);
+                        } else if (managingRoutine.id) {
+                            updateRoutine({ ...routineData, id: managingRoutine.id });
+                        }
+                        setManagingRoutine(null);
+                    }}
                 />
             )}
 
@@ -273,6 +328,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ bodyParts, setBodyPa
                 cancelText="إلغاء"
             >
                 <p>هل أنت متأكد من حذف جزء "{partToDelete?.name}" وكل تمارينه؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            </Modal>
+            
+            <Modal
+                isOpen={!!routineToDelete}
+                onClose={() => setRoutineToDelete(null)}
+                onConfirm={confirmDeleteRoutine}
+                title="تأكيد حذف الخطة"
+                confirmText="نعم, احذف"
+                cancelText="إلغاء"
+            >
+                <p>هل أنت متأكد من حذف خطة "{routineToDelete?.name}"؟ لن يتم حذف التمارين نفسها.</p>
             </Modal>
         </div>
     );

@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { WorkoutEntry, BodyPartId, BodyPart, Exercise } from '../types';
-import { SaveIcon, ClockIcon } from './Icons';
+import type { WorkoutEntry, BodyPartId, BodyPart, Exercise, WorkoutRoutine } from '../types';
+import { SaveIcon, ClockIcon, ClipboardPlusIcon } from './Icons';
+import { StartRoutineModal } from './StartRoutineModal';
 
 interface WorkoutInputFormProps {
   onAddEntry: (entry: Omit<WorkoutEntry, 'id' | 'date' | 'image'>) => void;
+  onAddMultipleEntries: (entries: Omit<WorkoutEntry, 'id' | 'date' | 'image'>[]) => void;
   bodyParts: BodyPart[];
   exercises: Record<BodyPartId, Exercise[]>;
+  routines: WorkoutRoutine[];
 }
 
 const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }> = ({ children, ...props }) => (
@@ -23,13 +26,15 @@ const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { c
 );
 
 
-export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, bodyParts, exercises }) => {
+export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, onAddMultipleEntries, bodyParts, exercises, routines }) => {
   const [selectedPart, setSelectedPart] = useState<BodyPartId | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [reps, setReps] = useState<string>('');
   const [comment, setComment] = useState('');
   const [week, setWeek] = useState<string>('');
+
+  const [isRoutineModalOpen, setIsRoutineModalOpen] = useState(false);
 
   const REST_DURATION = 60;
   const [timeLeft, setTimeLeft] = useState(REST_DURATION);
@@ -114,6 +119,26 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
 
   return (
     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
+      
+       <button
+        type="button"
+        onClick={() => setIsRoutineModalOpen(true)}
+        disabled={routines.length === 0}
+        className="w-full flex items-center justify-center gap-3 mb-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+      >
+        <ClipboardPlusIcon className="w-6 h-6" />
+        <span>{routines.length > 0 ? 'بدء تمرين من خطة' : 'أنشئ خطة أولاً في الإعدادات'}</span>
+      </button>
+
+      <div className="relative mb-6">
+        <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-700"></div>
+        </div>
+        <div className="relative flex justify-center">
+            <span className="bg-gray-800 px-2 text-sm text-gray-500">أو تسجيل تمرين فردي</span>
+        </div>
+      </div>
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-lg font-medium text-gray-300 mb-3">اختر الجزء:</label>
@@ -244,6 +269,17 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
             </>
         )}
       </form>
+
+      {isRoutineModalOpen && (
+        <StartRoutineModal
+            isOpen={isRoutineModalOpen}
+            onClose={() => setIsRoutineModalOpen(false)}
+            routines={routines}
+            bodyParts={bodyParts}
+            exercises={exercises}
+            onSave={onAddMultipleEntries}
+        />
+    )}
     </div>
   );
 };

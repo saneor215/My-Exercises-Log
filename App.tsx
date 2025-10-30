@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { WorkoutInputForm } from './components/WorkoutInputForm';
 import { WorkoutLog } from './components/WorkoutLog';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { WorkoutEntry, BodyPart, Exercise, BodyPartId } from './types';
+import type { WorkoutEntry, BodyPart, Exercise, BodyPartId, WorkoutRoutine } from './types';
 import { INITIAL_EXERCISES, INITIAL_BODY_PARTS } from './constants';
 import { Navigation } from './components/Navigation';
 import { CalendarPage } from './components/CalendarPage';
@@ -66,6 +66,7 @@ export default function App(): React.ReactElement {
   const [dietPlan, setDietPlan] = useLocalStorage<string>('workoutDietPlan_react_v2', initialDietPlan);
   const [bodyParts, setBodyParts] = useLocalStorage<BodyPart[]>('workout_bodyParts_v2', INITIAL_BODY_PARTS);
   const [exercises, setExercises] = useLocalStorage<Record<BodyPartId, Exercise[]>>('workout_exercises_v2', INITIAL_EXERCISES);
+  const [routines, setRoutines] = useLocalStorage<WorkoutRoutine[]>('workoutRoutines_v1', []);
 
   const [showIntro, setShowIntro] = useState(log.length === 0);
   const [activeView, setActiveView] = useState<View>('log');
@@ -79,6 +80,20 @@ export default function App(): React.ReactElement {
       image: exerciseDetails?.image || 'https://picsum.photos/seed/placeholder/100/100'
     };
     setLog(prevLog => [newEntry, ...prevLog]);
+    setShowIntro(false);
+  }, [setLog, exercises]);
+  
+  const addMultipleEntries = useCallback((entries: Omit<WorkoutEntry, 'id' | 'date' | 'image'>[]) => {
+    const newEntries: WorkoutEntry[] = entries.map(entry => {
+        const exerciseDetails = exercises[entry.part]?.find(e => e.name === entry.exercise);
+        return {
+            ...entry,
+            id: crypto.randomUUID(),
+            date: new Date().toISOString(),
+            image: exerciseDetails?.image || 'https://picsum.photos/seed/placeholder/100/100'
+        };
+    });
+    setLog(prevLog => [...newEntries, ...prevLog]);
     setShowIntro(false);
   }, [setLog, exercises]);
 
@@ -115,6 +130,20 @@ export default function App(): React.ReactElement {
         alert(`فشل الاستيراد: ${error.message}`);
     }
   }, [setLog, setDietPlan]);
+  
+  const addRoutine = useCallback((routine: Omit<WorkoutRoutine, 'id'>) => {
+    const newRoutine = { ...routine, id: crypto.randomUUID() };
+    setRoutines(prev => [...prev, newRoutine]);
+  }, [setRoutines]);
+
+  const updateRoutine = useCallback((updatedRoutine: WorkoutRoutine) => {
+      setRoutines(prev => prev.map(r => r.id === updatedRoutine.id ? updatedRoutine : r));
+  }, [setRoutines]);
+
+  const deleteRoutine = useCallback((id: string) => {
+      setRoutines(prev => prev.filter(r => r.id !== id));
+  }, [setRoutines]);
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 sm:p-6 lg:p-8">
@@ -129,6 +158,8 @@ export default function App(): React.ReactElement {
                     onAddEntry={addEntry}
                     bodyParts={bodyParts}
                     exercises={exercises}
+                    routines={routines}
+                    onAddMultipleEntries={addMultipleEntries}
                   />
                 </div>
                 <div className="lg:col-span-3">
@@ -168,6 +199,10 @@ export default function App(): React.ReactElement {
                 setBodyParts={setBodyParts}
                 exercises={exercises}
                 setExercises={setExercises}
+                routines={routines}
+                addRoutine={addRoutine}
+                updateRoutine={updateRoutine}
+                deleteRoutine={deleteRoutine}
               />
            )}
         </div>

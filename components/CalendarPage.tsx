@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import type { WorkoutEntry, BodyPart, Exercise, BodyPartId } from '../types';
 import { CalendarView } from './CalendarView';
@@ -19,6 +20,20 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
     const [editingEntry, setEditingEntry] = useState<WorkoutEntry | null>(null);
     const [viewingImage, setViewingImage] = useState<{src: string; alt: string} | null>(null);
     
+    const validLog = useMemo(() => {
+        return log.filter(entry => 
+            entry && 
+            typeof entry === 'object' &&
+            entry.id &&
+            entry.part &&
+            entry.exercise &&
+            typeof entry.weight === 'number' &&
+            typeof entry.reps === 'number' &&
+            typeof entry.week === 'number' &&
+            entry.date
+        );
+    }, [log]);
+
     const filteredLog = useMemo(() => {
         if (!selectedDate) return [];
         
@@ -30,12 +45,12 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
         const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
         const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
         
-        return log.filter(entry => {
+        return validLog.filter(entry => {
             const entryDate = new Date(entry.date); // Parses the ISO string correctly
             // Check if the entry's date falls within the 24-hour window of the selected local day
             return entryDate >= startOfDay && entryDate <= endOfDay;
         });
-    }, [log, selectedDate]);
+    }, [validLog, selectedDate]);
 
     const handleUpdate = (updatedEntry: WorkoutEntry) => {
         onUpdateEntry(updatedEntry);
@@ -59,7 +74,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
     return (
         <div className="space-y-8">
             <CalendarView 
-                log={log}
+                log={validLog}
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
             />
