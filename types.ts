@@ -39,7 +39,7 @@ export interface WorkoutRoutine {
 }
 
 // Nutrition Tracking Types
-export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'postWorkout' | 'snacks';
 
 export interface FoodItem {
     id: string;
@@ -49,6 +49,8 @@ export interface FoodItem {
     carbs: number;
     fat: number;
     servingSize: string; // e.g., "100g", "1 cup", "1 piece"
+    micronutrients?: string[]; // e.g., ['Vitamin C', 'Iron']
+    keywords?: string[]; // For smart search
 }
 
 export interface LoggedFood {
@@ -68,6 +70,11 @@ export interface NutritionGoals {
     protein: number;
     carbs: number;
     fat: number;
+}
+
+export interface MicronutrientInfo {
+    name: string;
+    emoji: string;
 }
 
 // For Import/Export

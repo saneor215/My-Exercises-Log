@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import type { BodyPart, Exercise, BodyPartId, WorkoutRoutine, NutritionGoals, FoodItem, AppData } from '../types';
 import { TrashIcon, XIcon, PencilIcon, SaveIcon, ImportIcon, ExportIcon, BookOpenIcon } from './Icons';
 import { Modal } from './Modal';
@@ -177,9 +177,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
     // State for inputs
     const [newPartName, setNewPartName] = useState('');
     const [editedGoals, setEditedGoals] = useState(nutritionGoals);
+    const [foodSearch, setFoodSearch] = useState('');
+    const [selectedFoodItem, setSelectedFoodItem] = useState<FoodItem | null>(null);
+
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const importedDataRef = useRef<AppData | null>(null);
+
+    const filteredFoodDatabase = useMemo(() => {
+        if (!foodSearch) return [];
+        const searchLower = foodSearch.toLowerCase();
+        return foodDatabase.filter(item =>
+            item.name.toLowerCase().includes(searchLower) ||
+            item.keywords?.some(k => k.toLowerCase().includes(searchLower))
+        ).slice(0, 10); // Limit results for performance
+    }, [foodSearch, foodDatabase]);
 
     // --- WORKOUT HANDLERS ---
     const handleAddPart = () => {
@@ -219,11 +231,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
     const handleSaveFoodItem = (foodData: Omit<FoodItem, 'id'> | FoodItem) => {
         if ('id' in foodData) {
             updateFoodInDatabase(foodData);
+            setSelectedFoodItem(foodData); // Update the displayed card
         } else {
-            addFoodToDatabase(foodData);
+            const newFood = addFoodToDatabase(foodData);
+            setSelectedFoodItem(newFood); // Select the newly created item
+        }
+        setFoodSearch('');
+    };
+    
+    const handleDeleteFoodItem = (item: FoodItem) => {
+        setFoodItemToDelete(item);
+    }
+    const confirmDeleteFoodItem = () => { 
+        if(foodItemToDelete) { 
+            deleteFoodFromDatabase(foodItemToDelete.id); 
+            setFoodItemToDelete(null);
+            if(selectedFoodItem?.id === foodItemToDelete.id) {
+                setSelectedFoodItem(null);
+            }
         }
     };
-    const confirmDeleteFoodItem = () => { if(foodItemToDelete) { deleteFoodFromDatabase(foodItemToDelete.id); setFoodItemToDelete(null); }};
 
     // --- DATA HANDLERS ---
     const handleExport = () => {
@@ -275,15 +302,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                 {/* Body Parts */}
                 <div className="space-y-4">
                     <h3 className="text-xl font-bold text-gray-200">الأجزاء الحالية</h3>
-                    {bodyParts.map(part => (
-                        <div key={part.id} className={`p-4 rounded-lg flex items-center justify-between bg-gradient-to-r ${part.gradient}`}>
-                            <span className="font-bold text-lg text-white">{part.icon} {part.name}</span>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setManagingPart(part)} className="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg text-sm">إدارة التمارين</button>
-                                <button onClick={() => setPartToDelete(part)} className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white"><TrashIcon className="w-5 h-5" /></button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {bodyParts.map(part => (
+                            <div key={part.id} className="bg-gray-700/50 rounded-xl shadow-lg flex flex-col overflow-hidden ring-1 ring-white/10">
+                                <div className={`p-4 bg-gradient-to-r ${part.gradient}`}>
+                                    <span className="font-bold text-lg text-white">{part.icon} {part.name}</span>
+                                </div>
+                                <div className="p-3 flex items-center justify-end gap-2">
+                                    <button onClick={() => setManagingPart(part)} className="flex-grow bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg text-sm transition-colors">
+                                        إدارة التمارين
+                                    </button>
+                                    <button onClick={() => setPartToDelete(part)} className="flex-shrink-0 p-2 rounded-full bg-gray-600 hover:bg-red-500/90 text-gray-300 hover:text-white transition-colors">
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
                 {/* Add Part */}
                 <div className="pt-8 mt-8 border-t border-gray-700">
@@ -317,19 +352,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                     <h3 className="text-xl font-bold text-gray-200 mb-4">أهدافك اليومية</h3>
                     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                         <div>
-                            <label htmlFor="goal-calories" className="block text-sm font-medium text-gray-400 mb-1">السعرات الحرارية</label>
+                            <label htmlFor="goal-calories" className="block text-sm font-medium text-gray-200 mb-1">السعرات الحرارية</label>
                             <input id="goal-calories" type="number" name="calories" value={editedGoals.calories} onChange={handleGoalChange} placeholder="2000" className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div>
-                            <label htmlFor="goal-protein" className="block text-sm font-medium text-gray-400 mb-1">البروتين (جرام)</label>
+                            <label htmlFor="goal-protein" className="block text-sm font-medium text-gray-200 mb-1">البروتين (جرام)</label>
                             <input id="goal-protein" type="number" name="protein" value={editedGoals.protein} onChange={handleGoalChange} placeholder="150" className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div>
-                            <label htmlFor="goal-carbs" className="block text-sm font-medium text-gray-400 mb-1">الكربوهيدرات (جرام)</label>
+                            <label htmlFor="goal-carbs" className="block text-sm font-medium text-gray-200 mb-1">الكربوهيدرات (جرام)</label>
                             <input id="goal-carbs" type="number" name="carbs" value={editedGoals.carbs} onChange={handleGoalChange} placeholder="200" className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div>
-                            <label htmlFor="goal-fat" className="block text-sm font-medium text-gray-400 mb-1">الدهون (جرام)</label>
+                            <label htmlFor="goal-fat" className="block text-sm font-medium text-gray-200 mb-1">الدهون (جرام)</label>
                             <input id="goal-fat" type="number" name="fat" value={editedGoals.fat} onChange={handleGoalChange} placeholder="65" className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <button onClick={() => setNutritionGoals(editedGoals)} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg h-10">حفظ الأهداف</button>
@@ -338,23 +373,54 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                  {/* Food Database */}
                 <div className="pt-8 mt-8 border-t border-gray-700">
                     <h3 className="text-xl font-bold text-gray-200 mb-2">قاعدة بيانات الأطعمة</h3>
-                    <div className="space-y-2">
-                    {foodDatabase.map(item => (
-                        <div key={item.id} className="bg-gray-700/50 p-3 rounded-lg flex items-center justify-between">
-                            <div>
-                               <p className="font-semibold text-white">{item.name} <span className="text-sm text-gray-400">({item.servingSize})</span></p>
-                               <p className="text-xs text-gray-400">
-                                   {item.calories} سعرة • {item.protein}ب • {item.carbs}ك • {item.fat}د
-                               </p>
+                    <div className="relative">
+                        <input 
+                            type="text"
+                            value={foodSearch}
+                            onChange={e => {
+                                setFoodSearch(e.target.value);
+                                setSelectedFoodItem(null); // Clear selection on new search
+                            }}
+                            placeholder="ابحث عن طعام..."
+                            className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {foodSearch && (
+                             <div className="absolute z-10 w-full mt-1 bg-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                {filteredFoodDatabase.length > 0 ? (
+                                    filteredFoodDatabase.map(item => (
+                                        <button key={item.id} onClick={() => { setSelectedFoodItem(item); setFoodSearch(''); }} className="block w-full text-right px-4 py-3 hover:bg-gray-500 transition-colors">
+                                            {item.name}
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="px-4 py-3 text-gray-400">لا توجد نتائج</div>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setManagingFoodItem(item)} className="p-2"><PencilIcon className="w-4 h-4 text-gray-400 hover:text-blue-400"/></button>
-                                <button onClick={() => setFoodItemToDelete(item)} className="p-2"><TrashIcon className="w-4 h-4 text-gray-400 hover:text-red-400"/></button>
-                            </div>
-                        </div>
-                    ))}
+                        )}
                     </div>
-                    <button onClick={() => setManagingFoodItem('new')} className="w-full mt-4 flex items-center justify-center gap-2 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+
+                    {selectedFoodItem && (
+                         <div className="mt-4 bg-gray-700/50 p-4 rounded-lg animate-fade-in">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-semibold text-xl text-white">{selectedFoodItem.name} <span className="text-base text-gray-400">({selectedFoodItem.servingSize})</span></p>
+                                    <p className="text-base text-gray-300">
+                                        <span className="text-yellow-400">{selectedFoodItem.calories} سعرة</span> • <span className="text-sky-400">{selectedFoodItem.protein} بروتين</span> • <span className="text-orange-400">{selectedFoodItem.carbs} كربوهيدرات</span> • <span className="text-amber-400">{selectedFoodItem.fat} دهون</span>
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setManagingFoodItem(selectedFoodItem)} className="p-3 rounded-full text-gray-300 hover:bg-blue-500/20 hover:text-blue-400 transition-colors">
+                                        <PencilIcon className="w-6 h-6"/>
+                                    </button>
+                                    <button onClick={() => handleDeleteFoodItem(selectedFoodItem)} className="p-3 rounded-full text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-colors">
+                                        <TrashIcon className="w-6 h-6"/>
+                                    </button>
+                                </div>
+                            </div>
+                         </div>
+                    )}
+                    
+                    <button onClick={() => setManagingFoodItem('new')} className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-bold">
                         <BookOpenIcon className="w-5 h-5" /> إضافة عنصر جديد
                     </button>
                 </div>

@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import type { NutritionGoals, FoodItem, DailyDietLog, MealType, LoggedFood } from '../types';
+import type { NutritionGoals, FoodItem, DailyDietLog, MealType, LoggedFood, MicronutrientInfo } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, PlusCircleIcon, TrashIcon, XIcon, SaveIcon } from './Icons';
 import { ManageFoodItemModal } from './ManageFoodItemModal';
+import { MICRONUTRIENTS_LIST } from '../constants';
 
 // Helper to format date to 'YYYY-MM-DD'
 const toYMD = (date: Date) => date.toISOString().split('T')[0];
 
 // --- Sub-components ---
 
-const TotalsSummary: React.FC<{ totals: Record<string, number>, goals: NutritionGoals }> = ({ totals, goals }) => {
+const TotalsSummary: React.FC<{ totals: Record<string, number>, goals: NutritionGoals, consumedMicronutrients: MicronutrientInfo[] }> = ({ totals, goals, consumedMicronutrients }) => {
     const macroInfo = [
         { name: 'بروتين', value: totals.protein, goal: goals.protein, unit: 'جرام', color: 'bg-sky-500' },
         { name: 'كربوهيدرات', value: totals.carbs, goal: goals.carbs, unit: 'جرام', color: 'bg-orange-500' },
@@ -47,6 +48,18 @@ const TotalsSummary: React.FC<{ totals: Record<string, number>, goals: Nutrition
                     ))}
                 </div>
             </div>
+            {consumedMicronutrients.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-300 mb-2">الفيتامينات والمعادن التي تم استهلاكها اليوم:</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {consumedMicronutrients.map(micro => (
+                            <span key={micro.name} className="bg-gray-700 text-gray-200 text-sm font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                                {micro.emoji} {micro.name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -133,18 +146,24 @@ export const DietPage: React.FC<DietPageProps> = ({ goals, foodDatabase, dailyLo
     const selectedDateStr = toYMD(selectedDate);
     const dayLog = dailyLogs[selectedDateStr] || {};
 
-    const totals = useMemo(() => {
-        const result = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    const { totals, consumedMicronutrients } = useMemo(() => {
+        const dailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+        const micros = new Set<string>();
+
         Object.values(dayLog).flat().forEach(loggedFood => {
             const foodItem = foodDatabase.find(f => f.id === loggedFood.foodId);
             if (foodItem) {
-                result.calories += foodItem.calories * loggedFood.servings;
-                result.protein += foodItem.protein * loggedFood.servings;
-                result.carbs += foodItem.carbs * loggedFood.servings;
-                result.fat += foodItem.fat * loggedFood.servings;
+                dailyTotals.calories += foodItem.calories * loggedFood.servings;
+                dailyTotals.protein += foodItem.protein * loggedFood.servings;
+                dailyTotals.carbs += foodItem.carbs * loggedFood.servings;
+                dailyTotals.fat += foodItem.fat * loggedFood.servings;
+                foodItem.micronutrients?.forEach(micro => micros.add(micro));
             }
         });
-        return result;
+
+        const consumedMicronutrientsInfo = MICRONUTRIENTS_LIST.filter(m => micros.has(m.name));
+
+        return { totals: dailyTotals, consumedMicronutrients: consumedMicronutrientsInfo };
     }, [dayLog, foodDatabase]);
 
     const changeDate = (amount: number) => {
@@ -159,6 +178,7 @@ export const DietPage: React.FC<DietPageProps> = ({ goals, foodDatabase, dailyLo
         breakfast: '🍳 الفطور',
         lunch: '🍽️ الغداء',
         dinner: '🌙 العشاء',
+        postWorkout: '🏋️‍♂️ بعد التمرين',
         snacks: '🍏 وجبات خفيفة',
     };
 
@@ -171,22 +191,23 @@ export const DietPage: React.FC<DietPageProps> = ({ goals, foodDatabase, dailyLo
         if (!('id' in foodData)) {
             onAddFoodToDatabase(foodData);
         }
+        // No need to handle update here as it's initiated from settings
     };
 
     return (
         <div className="space-y-8">
              <div className="flex justify-between items-center bg-gray-800 p-4 rounded-2xl">
                  <button onClick={() => changeDate(-1)} className="p-2 rounded-full hover:bg-gray-700"><ChevronLeftIcon /></button>
-                 <h2 className="text-xl font-bold">{selectedDate.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' })}</h2>
+                 <h2 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">{selectedDate.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' })}</h2>
                  <button onClick={() => changeDate(1)} className="p-2 rounded-full hover:bg-gray-700"><ChevronRightIcon /></button>
              </div>
              
-             <TotalsSummary totals={totals} goals={goals} />
+             <TotalsSummary totals={totals} goals={goals} consumedMicronutrients={consumedMicronutrients} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {(Object.keys(mealTitles) as MealType[]).map(meal => (
                     <div key={meal} className="bg-gray-800 p-4 rounded-2xl ring-1 ring-white/10">
-                        <h3 className="text-lg font-bold mb-3">{mealTitles[meal]}</h3>
+                        <h3 className="text-lg font-bold mb-3 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">{mealTitles[meal]}</h3>
                         <div className="space-y-2 mb-3">
                             {(dayLog[meal] || []).map(loggedFood => {
                                 const foodItem = foodDatabase.find(f => f.id === loggedFood.foodId);
