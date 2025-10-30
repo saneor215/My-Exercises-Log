@@ -143,7 +143,7 @@ export const ManageFoodItemModal: React.FC<ManageFoodItemModalProps> = ({ isOpen
                     
                     {selectedBaseFood && <p className="text-xs text-center text-blue-300">يتم حساب القيم تلقائيًا. عدّل أي حقل للدخول في الوضع اليدوي.</p>}
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="calories" className="block text-sm font-medium text-gray-300 mb-2">السعرات الحرارية</label>
                             <input id="calories" type="number" step="0.1" min="0" value={calories} onChange={e => handleManualEdit(setCalories, e.target.value)} placeholder="0" className="w-full bg-gray-700 text-white p-3 rounded-lg" required/>
