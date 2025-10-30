@@ -271,7 +271,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
             
             {/* WORKOUT MANAGEMENT */}
             <section>
-                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">إدارة التمارين</h2>
+                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">🏋️ إدارة التمارين</h2>
                 {/* Body Parts */}
                 <div className="space-y-4">
                     <h3 className="text-xl font-bold text-gray-200">الأجزاء الحالية</h3>
@@ -311,7 +311,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
 
             {/* NUTRITION MANAGEMENT */}
             <section className="pt-8 border-t border-gray-700">
-                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-lime-300 bg-clip-text text-transparent">إدارة التغذية</h2>
+                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-lime-300 bg-clip-text text-transparent">🍎 إدارة التغذية</h2>
                  {/* Goals */}
                 <div>
                     <h3 className="text-xl font-bold text-gray-200 mb-4">أهدافك اليومية</h3>
@@ -362,7 +362,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
             
             {/* DATA MANAGEMENT */}
             <section className="pt-8 border-t border-gray-700">
-                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-500 to-indigo-400 bg-clip-text text-transparent">إدارة البيانات</h2>
+                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-500 to-indigo-400 bg-clip-text text-transparent">💾 إدارة البيانات</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button onClick={handleExport} className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-lg">
                         <ExportIcon className="w-5 h-5"/> <span>تصدير كل البيانات</span>
