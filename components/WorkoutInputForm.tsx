@@ -121,6 +121,20 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
       
        <button
+          type="button"
+          onClick={handleTimerToggle}
+          className={`w-full flex items-center justify-center gap-2 border-2 font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 relative overflow-hidden mb-6 ${isTimerRunning ? 'border-red-500 text-red-400' : 'border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 focus:ring-cyan-400'}`}
+      >
+          {isTimerRunning && (
+              <div className="absolute top-0 right-0 h-full bg-red-500/20" style={{width: `${(timeLeft / REST_DURATION) * 100}%`, transition: 'width 1s linear'}}></div>
+          )}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+              <ClockIcon className="w-5 h-5" />
+              {isTimerRunning ? `${timeLeft} ثانية متبقية` : 'مؤقت الراحة'}
+          </span>
+      </button>
+
+       <button
         type="button"
         onClick={() => setIsRoutineModalOpen(true)}
         disabled={routines.length === 0}
@@ -243,24 +257,11 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
                     />
                 </div>
 
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-4 border-t border-gray-700">
-                    <button
-                        type="button"
-                        onClick={handleTimerToggle}
-                        className={`flex items-center justify-center gap-2 border-2 font-bold py-3 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 relative overflow-hidden ${isTimerRunning ? 'border-red-500 text-red-400' : 'border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 focus:ring-cyan-400'}`}
-                    >
-                        {isTimerRunning && (
-                            <div className="absolute top-0 right-0 h-full bg-red-500/20" style={{width: `${(timeLeft / REST_DURATION) * 100}%`, transition: 'width 1s linear'}}></div>
-                        )}
-                        <span className="relative z-10 flex items-center justify-center gap-2">
-                            <ClockIcon className="w-5 h-5" />
-                            {isTimerRunning ? `${timeLeft} ثانية متبقية` : 'مؤقت الراحة'}
-                        </span>
-                    </button>
+                 <div className="pt-4 mt-4 border-t border-gray-700">
                     <button
                         type="submit"
                         disabled={!selectedPart || !exercises[selectedPart] || exercises[selectedPart].length === 0}
-                        className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-400"
+                        className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-400"
                     >
                         <SaveIcon className="w-5 h-5" />
                         <span>حفظ التمرين</span>
