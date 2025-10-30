@@ -113,7 +113,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({ log, bodyParts, exer
     return (
         <div className="space-y-8">
             <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
-                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">نظرة عامة على التقدم</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-6">نظرة عامة على التقدم</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                    <StatCard title="إجمالي التمارين المسجلة" value={overallStats.totalWorkouts.toLocaleString('ar-EG')} />
                    <StatCard title="أثقل وزن (كل التمارين)" value={`${overallStats.heaviestLift.toLocaleString('ar-EG')} كجم`} />
@@ -121,7 +121,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({ log, bodyParts, exer
             </div>
 
             <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
-                <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-lime-400 to-green-400 bg-clip-text text-transparent">تحليل تمرين محدد</h3>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-6">تحليل تمرين محدد</h2>
                 <div className="mb-6">
                     <label htmlFor="exercise-progress-select" className="sr-only">اختر تمريناً</label>
                     <div className="relative">
@@ -162,7 +162,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({ log, bodyParts, exer
             </div>
 
             <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
-                 <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">الأرقام القياسية الشخصية (PRs)</h3>
+                 <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-6">الأرقام القياسية الشخصية (PRs)</h2>
                  <div className="overflow-x-auto">
                     <table className="w-full text-right">
                         <thead className="border-b border-gray-700">

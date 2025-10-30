@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { WorkoutEntry, BodyPart, Exercise, BodyPartId } from '../types';
 import { CalendarView } from './CalendarView';
@@ -81,7 +80,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
 
             {selectedDate && (
                 <div className="bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
-                    <h3 className="font-bold text-xl mb-4 bg-gradient-to-r from-teal-300 to-cyan-400 bg-clip-text text-transparent">
+                    <h3 className="font-bold text-2xl bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-4">
                         تمارين يوم: {formattedSelectedDate}
                     </h3>
                     <div className="space-y-4">

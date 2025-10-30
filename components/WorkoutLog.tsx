@@ -114,7 +114,7 @@ export const WorkoutLog: React.FC<WorkoutLogProps> = ({ log, onDeleteEntry, onUp
 
   return (
     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10 h-full flex flex-col">
-      <h3 className="text-2xl font-bold mb-4 text-gray-200">📊 السجل</h3>
+      <h3 className="text-2xl font-bold text-white mb-6">📊 السجل</h3>
       
       {validLog.length > 0 && (
           <div className="space-y-4 mb-4">

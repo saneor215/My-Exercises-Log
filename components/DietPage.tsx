@@ -20,7 +20,7 @@ const TotalsSummary: React.FC<{ totals: Record<string, number>, goals: Nutrition
 
     return (
         <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
-            <h2 className="text-2xl font-bold mb-4 text-white">ملخص اليوم</h2>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent mb-6">ملخص اليوم</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col items-center justify-center">
                     <div className="relative w-32 h-32">
@@ -236,7 +236,7 @@ export const DietPage: React.FC<DietPageProps> = ({ goals, foodDatabase, dailyLo
         <div className="space-y-8">
              <div className="flex justify-between items-center bg-gray-800 p-4 rounded-2xl">
                  <button onClick={() => changeDate(-1)} className="p-2 rounded-full hover:bg-gray-700"><ChevronLeftIcon /></button>
-                 <h2 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">{selectedDate.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' })}</h2>
+                 <h2 className="text-xl font-bold text-white">{selectedDate.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' })}</h2>
                  <button onClick={() => changeDate(1)} className="p-2 rounded-full hover:bg-gray-700"><ChevronRightIcon /></button>
              </div>
              
@@ -245,7 +245,7 @@ export const DietPage: React.FC<DietPageProps> = ({ goals, foodDatabase, dailyLo
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {(Object.keys(mealTitles) as MealType[]).map(meal => (
                     <div key={meal} className="bg-gray-800 p-4 rounded-2xl ring-1 ring-white/10">
-                        <h3 className="text-lg font-bold mb-3 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">{mealTitles[meal]}</h3>
+                        <h3 className="text-lg font-bold text-teal-300 mb-3">{mealTitles[meal]}</h3>
                         <div className="space-y-2 mb-3">
                             {(dayLog[meal] || []).map(loggedFood => {
                                 const foodItem = foodDatabase.find(f => f.id === loggedFood.foodId);
