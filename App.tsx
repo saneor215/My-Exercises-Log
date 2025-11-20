@@ -44,13 +44,13 @@ export default function App(): React.ReactElement {
     setShowIntro(false);
   }, [setLog, exercises]);
   
-  const addMultipleEntries = useCallback((entries: Omit<WorkoutEntry, 'id' | 'date' | 'image'>[]) => {
+  const addMultipleEntries = useCallback((entries: (Omit<WorkoutEntry, 'id' | 'date' | 'image'> & { date?: string })[]) => {
     const newEntries: WorkoutEntry[] = entries.map(entry => {
         const exerciseDetails = exercises[entry.part]?.find(e => e.name === entry.exercise);
         return {
             ...entry,
             id: crypto.randomUUID(),
-            date: new Date().toISOString(),
+            date: entry.date || new Date().toISOString(),
             image: exerciseDetails?.image || 'https://picsum.photos/seed/placeholder/100/100'
         };
     });
@@ -216,6 +216,7 @@ export default function App(): React.ReactElement {
                 log={log} 
                 onDeleteEntry={deleteEntry} 
                 onUpdateEntry={updateEntry}
+                onAddMultipleEntries={addMultipleEntries}
                 bodyParts={bodyParts}
                 exercises={exercises}
                 weeklySchedule={weeklySchedule}

@@ -6,7 +6,7 @@ import { StartRoutineModal } from './StartRoutineModal';
 
 interface WorkoutInputFormProps {
   onAddEntry: (entry: Omit<WorkoutEntry, 'id' | 'date' | 'image'>) => void;
-  onAddMultipleEntries: (entries: Omit<WorkoutEntry, 'id' | 'date' | 'image'>[]) => void;
+  onAddMultipleEntries: (entries: (Omit<WorkoutEntry, 'id' | 'date' | 'image'> & { date?: string })[]) => void;
   bodyParts: BodyPart[];
   exercises: Record<BodyPartId, Exercise[]>;
   routines: WorkoutRoutine[];
@@ -137,7 +137,10 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
 
       const entries = todayScheduledRoutine.exercises.map(ex => {
           // Find the most recent log entry for this exercise to get the last weight/reps
-          const lastEntry = log.find(e => e.exercise === ex.exerciseName);
+          // Sort by date descending to ensure we get the latest
+          const history = log.filter(e => e.exercise === ex.exerciseName);
+          history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          const lastEntry = history[0];
           
           return {
               part: ex.partId,
