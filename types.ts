@@ -1,3 +1,4 @@
+
 export type BodyPartId = 'upper' | 'lower' | 'friday' | string;
 
 export type View = 'log' | 'calendar' | 'progress' | 'diet' | 'settings';
@@ -37,6 +38,8 @@ export interface WorkoutRoutine {
     name: string;
     exercises: RoutineExercise[];
 }
+
+export type WeeklySchedule = Record<string, string | null>; // key: day index '0'-'6', value: routineId
 
 // Nutrition Tracking Types
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'postWorkout' | 'snacks';
@@ -83,6 +86,7 @@ export interface AppData {
     bodyParts: BodyPart[];
     exercises: Record<BodyPartId, Exercise[]>;
     routines: WorkoutRoutine[];
+    weeklySchedule: WeeklySchedule;
     nutritionGoals: NutritionGoals;
     foodDatabase: FoodItem[];
     dailyDietLogs: DailyDietLog;

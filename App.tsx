@@ -1,8 +1,9 @@
+
 import React, { useState, useCallback } from 'react';
 import { WorkoutInputForm } from './components/WorkoutInputForm';
 import { WorkoutLog } from './components/WorkoutLog';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { WorkoutEntry, BodyPart, Exercise, BodyPartId, WorkoutRoutine, AppData, NutritionGoals, FoodItem, DailyDietLog, LoggedFood, MealType } from './types';
+import type { WorkoutEntry, BodyPart, Exercise, BodyPartId, WorkoutRoutine, AppData, NutritionGoals, FoodItem, DailyDietLog, LoggedFood, MealType, WeeklySchedule } from './types';
 import { INITIAL_EXERCISES, INITIAL_BODY_PARTS, INITIAL_NUTRITION_GOALS, INITIAL_FOOD_DATABASE, INITIAL_DAILY_DIET_LOGS } from './constants';
 import { Navigation } from './components/Navigation';
 import { CalendarPage } from './components/CalendarPage';
@@ -19,6 +20,7 @@ export default function App(): React.ReactElement {
   const [bodyParts, setBodyParts] = useLocalStorage<BodyPart[]>('workout_bodyParts_v2', INITIAL_BODY_PARTS);
   const [exercises, setExercises] = useLocalStorage<Record<BodyPartId, Exercise[]>>('workout_exercises_v2', INITIAL_EXERCISES);
   const [routines, setRoutines] = useLocalStorage<WorkoutRoutine[]>('workoutRoutines_v1', []);
+  const [weeklySchedule, setWeeklySchedule] = useLocalStorage<WeeklySchedule>('workoutSchedule_v1', {});
 
   // Nutrition State
   const [nutritionGoals, setNutritionGoals] = useLocalStorage<NutritionGoals>('nutritionGoals_v1', INITIAL_NUTRITION_GOALS);
@@ -150,6 +152,7 @@ export default function App(): React.ReactElement {
         setBodyParts(data.bodyParts || INITIAL_BODY_PARTS);
         setExercises(data.exercises || INITIAL_EXERCISES);
         setRoutines(data.routines || []);
+        setWeeklySchedule(data.weeklySchedule || {});
         setNutritionGoals(data.nutritionGoals || INITIAL_NUTRITION_GOALS);
         setFoodDatabase(data.foodDatabase || INITIAL_FOOD_DATABASE);
         setDailyDietLogs(data.dailyDietLogs || INITIAL_DAILY_DIET_LOGS);
@@ -160,7 +163,7 @@ export default function App(): React.ReactElement {
         console.error("Import failed:", error);
         alert(`فشل الاستيراد: ${error instanceof Error ? error.message : "خطأ غير معروف"}`);
     }
-  }, [setLog, setBodyParts, setExercises, setRoutines, setNutritionGoals, setFoodDatabase, setDailyDietLogs]);
+  }, [setLog, setBodyParts, setExercises, setRoutines, setWeeklySchedule, setNutritionGoals, setFoodDatabase, setDailyDietLogs]);
 
   const exportData = useCallback((): AppData => {
     return {
@@ -168,11 +171,12 @@ export default function App(): React.ReactElement {
         bodyParts,
         exercises,
         routines,
+        weeklySchedule,
         nutritionGoals,
         foodDatabase,
         dailyDietLogs
     };
-  }, [log, bodyParts, exercises, routines, nutritionGoals, foodDatabase, dailyDietLogs]);
+  }, [log, bodyParts, exercises, routines, weeklySchedule, nutritionGoals, foodDatabase, dailyDietLogs]);
 
 
   return (
@@ -190,6 +194,8 @@ export default function App(): React.ReactElement {
                     exercises={exercises}
                     routines={routines}
                     onAddMultipleEntries={addMultipleEntries}
+                    weeklySchedule={weeklySchedule}
+                    log={log}
                   />
                 </div>
                 <div className="lg:col-span-3">
@@ -212,6 +218,8 @@ export default function App(): React.ReactElement {
                 onUpdateEntry={updateEntry}
                 bodyParts={bodyParts}
                 exercises={exercises}
+                weeklySchedule={weeklySchedule}
+                routines={routines}
               />
            )}
            {activeView === 'progress' && (
@@ -241,6 +249,8 @@ export default function App(): React.ReactElement {
                 addRoutine={addRoutine}
                 updateRoutine={updateRoutine}
                 deleteRoutine={deleteRoutine}
+                weeklySchedule={weeklySchedule}
+                setWeeklySchedule={setWeeklySchedule}
                 nutritionGoals={nutritionGoals}
                 setNutritionGoals={setNutritionGoals}
                 foodDatabase={foodDatabase}

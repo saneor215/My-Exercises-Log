@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { NutritionGoals, FoodItem, DailyDietLog, MealType, LoggedFood, MicronutrientInfo } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, PlusCircleIcon, TrashIcon, XIcon, SaveIcon } from './Icons';
@@ -188,15 +189,20 @@ export const DietPage: React.FC<DietPageProps> = ({ goals, foodDatabase, dailyLo
         const dailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
         const micros = new Set<string>();
 
-        Object.values(dayLog).flat().forEach(loggedFood => {
-            const foodItem = foodDatabase.find(f => f.id === loggedFood.foodId);
-            if (foodItem) {
-                dailyTotals.calories += foodItem.calories * loggedFood.servings;
-                dailyTotals.protein += foodItem.protein * loggedFood.servings;
-                dailyTotals.carbs += foodItem.carbs * loggedFood.servings;
-                dailyTotals.fat += foodItem.fat * loggedFood.servings;
-                foodItem.micronutrients?.forEach(micro => micros.add(micro));
-            }
+        const meals = Object.values(dayLog) as (LoggedFood[] | undefined)[];
+        meals.forEach(meal => {
+             if (Array.isArray(meal)) {
+                 meal.forEach(loggedFood => {
+                    const foodItem = foodDatabase.find(f => f.id === loggedFood.foodId);
+                    if (foodItem) {
+                        dailyTotals.calories += foodItem.calories * loggedFood.servings;
+                        dailyTotals.protein += foodItem.protein * loggedFood.servings;
+                        dailyTotals.carbs += foodItem.carbs * loggedFood.servings;
+                        dailyTotals.fat += foodItem.fat * loggedFood.servings;
+                        foodItem.micronutrients?.forEach(micro => micros.add(micro));
+                    }
+                 });
+             }
         });
 
         const consumedMicronutrientsInfo = MICRONUTRIENTS_LIST.filter(m => micros.has(m.name));

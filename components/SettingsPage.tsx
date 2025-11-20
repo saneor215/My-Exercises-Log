@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useMemo } from 'react';
-import type { BodyPart, Exercise, BodyPartId, WorkoutRoutine, NutritionGoals, FoodItem, AppData } from '../types';
-import { TrashIcon, XIcon, PencilIcon, SaveIcon, ImportIcon, ExportIcon, BookOpenIcon } from './Icons';
+import type { BodyPart, Exercise, BodyPartId, WorkoutRoutine, NutritionGoals, FoodItem, AppData, WeeklySchedule } from '../types';
+import { TrashIcon, XIcon, PencilIcon, SaveIcon, ImportIcon, ExportIcon, BookOpenIcon, CalendarIcon } from './Icons';
 import { Modal } from './Modal';
 import { ManageRoutineModal } from './ManageRoutineModal';
 import { ManageFoodItemModal } from './ManageFoodItemModal';
+import { WEEKDAYS_MAP } from '../constants';
 
 interface SettingsPageProps {
   // Workout props
@@ -15,6 +17,8 @@ interface SettingsPageProps {
   addRoutine: (routine: Omit<WorkoutRoutine, 'id'>) => void;
   updateRoutine: (routine: WorkoutRoutine) => void;
   deleteRoutine: (id: string) => void;
+  weeklySchedule: WeeklySchedule;
+  setWeeklySchedule: React.Dispatch<React.SetStateAction<WeeklySchedule>>;
   // Nutrition props
   nutritionGoals: NutritionGoals;
   setNutritionGoals: React.Dispatch<React.SetStateAction<NutritionGoals>>;
@@ -161,7 +165,7 @@ const ManagePartModal: React.FC<{
 
 // --- MAIN SETTINGS PAGE COMPONENT ---
 export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
-    const { bodyParts, setBodyParts, exercises, setExercises, routines, addRoutine, updateRoutine, deleteRoutine } = props;
+    const { bodyParts, setBodyParts, exercises, setExercises, routines, addRoutine, updateRoutine, deleteRoutine, weeklySchedule, setWeeklySchedule } = props;
     const { nutritionGoals, setNutritionGoals, foodDatabase, addFoodToDatabase, updateFoodInDatabase, deleteFoodFromDatabase } = props;
     const { onImportData, onExportData } = props;
 
@@ -224,6 +228,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
     const handleExerciseAdd = (partId: BodyPartId, newExercise: Exercise) => setExercises(prev => ({ ...prev, [partId]: [...(prev[partId] || []), newExercise] }));
     const handleExerciseDelete = (partId: BodyPartId, exIndex: number) => setExercises(prev => ({ ...prev, [partId]: prev[partId].filter((_, i) => i !== exIndex) }));
     const confirmDeleteRoutine = () => { if (routineToDelete) { deleteRoutine(routineToDelete.id); setRoutineToDelete(null); }};
+    
+    const handleScheduleChange = (dayId: string, routineId: string) => {
+        setWeeklySchedule(prev => ({
+            ...prev,
+            [dayId]: routineId || null
+        }));
+    };
 
     // --- NUTRITION HANDLERS ---
     const handleGoalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,6 +355,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                         </div>
                     ))}
                     <button onClick={() => setManagingRoutine('new')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg">إنشاء خطة جديدة</button>
+                </div>
+
+                 {/* Weekly Schedule */}
+                 <div className="pt-8 mt-8 border-t border-gray-700">
+                    <div className="flex items-center gap-2 mb-4">
+                        <CalendarIcon className="w-6 h-6 text-yellow-400" />
+                        <h3 className="text-xl font-bold text-gray-200">جدول التمارين الأسبوعي</h3>
+                    </div>
+                    <p className="text-gray-400 text-sm mb-4">حدد خطة لكل يوم من أيام الأسبوع ليتم تذكيرك بها وتعبئتها تلقائيًا.</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {WEEKDAYS_MAP.map(day => (
+                            <div key={day.id} className="bg-gray-700/50 p-4 rounded-lg flex items-center justify-between gap-4">
+                                <span className="font-bold text-white min-w-[60px]">{day.name}</span>
+                                <div className="relative flex-grow">
+                                    <select 
+                                        value={weeklySchedule[day.id] || ''} 
+                                        onChange={(e) => handleScheduleChange(day.id, e.target.value)}
+                                        className="w-full bg-gray-600 text-white px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">راحة / غير محدد</option>
+                                        {routines.map(r => (
+                                            <option key={r.id} value={r.id}>{r.name}</option>
+                                        ))}
+                                    </select>
+                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-2 text-gray-400">
+                                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 

@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo } from 'react';
-import type { WorkoutEntry, BodyPart, Exercise, BodyPartId } from '../types';
+import type { WorkoutEntry, BodyPart, Exercise, BodyPartId, WeeklySchedule, WorkoutRoutine } from '../types';
 import { CalendarView } from './CalendarView';
 import { LogItem } from './LogItem';
 import { EditWorkoutModal } from './EditWorkoutModal';
@@ -12,9 +13,11 @@ interface CalendarPageProps {
   onUpdateEntry: (entry: WorkoutEntry) => void;
   bodyParts: BodyPart[];
   exercises: Record<BodyPartId, Exercise[]>;
+  weeklySchedule?: WeeklySchedule;
+  routines?: WorkoutRoutine[];
 }
 
-export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, onUpdateEntry, bodyParts, exercises }) => {
+export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, onUpdateEntry, bodyParts, exercises, weeklySchedule, routines }) => {
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [editingEntry, setEditingEntry] = useState<WorkoutEntry | null>(null);
     const [viewingImage, setViewingImage] = useState<{src: string; alt: string} | null>(null);
@@ -50,6 +53,19 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
             return entryDate >= startOfDay && entryDate <= endOfDay;
         });
     }, [validLog, selectedDate]);
+    
+    // Determine if there is a scheduled routine for the selected date
+    const scheduledRoutineForSelectedDate = useMemo(() => {
+        if (!selectedDate || !weeklySchedule || !routines) return null;
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
+        const dayIndex = dateObj.getDay().toString();
+        
+        const routineId = weeklySchedule[dayIndex];
+        if (!routineId) return null;
+        
+        return routines.find(r => r.id === routineId) || null;
+    }, [selectedDate, weeklySchedule, routines]);
 
     const handleUpdate = (updatedEntry: WorkoutEntry) => {
         onUpdateEntry(updatedEntry);
@@ -95,6 +111,17 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
                                     onImageClick={setViewingImage}
                                 />
                             ))
+                        ) : scheduledRoutineForSelectedDate ? (
+                            <div className="text-center p-8 border-2 border-dashed border-blue-500/30 bg-blue-900/10 rounded-xl">
+                                <p className="text-lg font-bold text-blue-200 mb-2">جدول اليوم: {scheduledRoutineForSelectedDate.name}</p>
+                                <p className="text-gray-400 mb-4">لم يتم تسجيل التمارين لهذا اليوم بعد. يحتوي الجدول على:</p>
+                                <ul className="text-sm text-gray-300 space-y-1 mb-4 inline-block text-right">
+                                    {scheduledRoutineForSelectedDate.exercises.map((ex, idx) => (
+                                        <li key={idx}>• {ex.exerciseName}</li>
+                                    ))}
+                                </ul>
+                                <p className="text-xs text-gray-500 mt-2">انتقل إلى صفحة التسجيل لتسجيل هذا الروتين بسرعة.</p>
+                            </div>
                         ) : (
                             <div className="text-center text-gray-500 p-8 border-2 border-dashed border-gray-700 rounded-xl">
                                 لا توجد تمارين مسجلة في هذا اليوم.

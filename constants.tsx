@@ -1,3 +1,4 @@
+
 import type { BodyPart, BodyPartId, Exercise, NutritionGoals, FoodItem, DailyDietLog, MicronutrientInfo } from './types';
 
 export const INITIAL_BODY_PARTS: BodyPart[] = [
@@ -39,6 +40,16 @@ export const INITIAL_EXERCISES: Record<BodyPartId, Exercise[]> = {
     { name: "Cardio Treadmill (مشاية)", image: "https://picsum.photos/seed/treadmill/100/100" }
   ]
 };
+
+export const WEEKDAYS_MAP = [
+    { id: '6', name: 'السبت' },
+    { id: '0', name: 'الأحد' },
+    { id: '1', name: 'الاثنين' },
+    { id: '2', name: 'الثلاثاء' },
+    { id: '3', name: 'الأربعاء' },
+    { id: '4', name: 'الخميس' },
+    { id: '5', name: 'الجمعة' },
+];
 
 
 // Nutrition Constants

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
-import type { WorkoutEntry, BodyPartId, BodyPart, Exercise, WorkoutRoutine } from '../types';
-import { SaveIcon, ClockIcon, ClipboardPlusIcon } from './Icons';
+import type { WorkoutEntry, BodyPartId, BodyPart, Exercise, WorkoutRoutine, WeeklySchedule, RoutineExercise } from '../types';
+import { SaveIcon, ClockIcon, ClipboardPlusIcon, CalendarIcon } from './Icons';
 import { StartRoutineModal } from './StartRoutineModal';
 
 interface WorkoutInputFormProps {
@@ -9,6 +10,8 @@ interface WorkoutInputFormProps {
   bodyParts: BodyPart[];
   exercises: Record<BodyPartId, Exercise[]>;
   routines: WorkoutRoutine[];
+  weeklySchedule?: WeeklySchedule;
+  log: WorkoutEntry[];
 }
 
 const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }> = ({ children, ...props }) => (
@@ -26,7 +29,7 @@ const CustomSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { c
 );
 
 
-export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, onAddMultipleEntries, bodyParts, exercises, routines }) => {
+export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, onAddMultipleEntries, bodyParts, exercises, routines, weeklySchedule, log }) => {
   const [selectedPart, setSelectedPart] = useState<BodyPartId | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
@@ -40,6 +43,15 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
   const [timeLeft, setTimeLeft] = useState(REST_DURATION);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   
+  // Check for today's schedule
+  const todayScheduledRoutine = useMemo(() => {
+      if (!weeklySchedule || !routines) return null;
+      const dayIndex = new Date().getDay().toString(); // 0-6
+      const routineId = weeklySchedule[dayIndex];
+      if (!routineId) return null;
+      return routines.find(r => r.id === routineId) || null;
+  }, [weeklySchedule, routines]);
+
   const exerciseImage = useMemo(() => {
     if (!selectedPart || !selectedExercise) return null;
     return exercises[selectedPart]?.find(ex => ex.name === selectedExercise)?.image;
@@ -116,6 +128,29 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
     setComment('');
     setWeek('');
   };
+  
+  const handleQuickLogSchedule = () => {
+      if (!todayScheduledRoutine) return;
+      const weekStr = prompt('الرجاء إدخال رقم الأسبوع:', '1');
+      const weekNum = parseInt(weekStr || '', 10);
+      if (!weekStr || isNaN(weekNum)) return;
+
+      const entries = todayScheduledRoutine.exercises.map(ex => {
+          // Find the most recent log entry for this exercise to get the last weight/reps
+          const lastEntry = log.find(e => e.exercise === ex.exerciseName);
+          
+          return {
+              part: ex.partId,
+              exercise: ex.exerciseName,
+              weight: lastEntry ? lastEntry.weight : 0, // Auto-fill from history
+              reps: lastEntry ? lastEntry.reps : 0,    // Auto-fill from history
+              week: weekNum,
+              comment: 'تم التسجيل تلقائياً من الجدول',
+          };
+      });
+      onAddMultipleEntries(entries);
+      alert(`تم تسجيل تمارين ${todayScheduledRoutine.name}. تم استخدام أوزان آخر جلسة كقيم افتراضية.`);
+  }
 
   return (
     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg ring-1 ring-white/10">
@@ -133,6 +168,24 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
               {isTimerRunning ? `${timeLeft} ثانية متبقية` : 'مؤقت الراحة'}
           </span>
       </button>
+      
+      {todayScheduledRoutine && (
+         <div className="mb-6 bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-4 rounded-xl border border-blue-500/30">
+             <div className="flex items-center gap-3 mb-3">
+                 <CalendarIcon className="w-6 h-6 text-blue-400" />
+                 <div>
+                     <p className="text-xs text-blue-300 font-bold">جدول اليوم</p>
+                     <h3 className="text-lg font-bold text-white">{todayScheduledRoutine.name}</h3>
+                 </div>
+             </div>
+             <button 
+                onClick={handleQuickLogSchedule}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-2 px-3 rounded-lg transition-colors shadow-md"
+             >
+                 تسجيل تمارين اليوم سريعاً (بأوزان سابقة)
+             </button>
+         </div>
+      )}
 
        <button
         type="button"
