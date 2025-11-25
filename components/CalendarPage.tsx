@@ -77,7 +77,11 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ log, onDeleteEntry, 
     const handleLogScheduledRoutine = () => {
         if (!scheduledRoutineForSelectedDate || !selectedDate) return;
         
-        const weekStr = prompt('الرجاء إدخال رقم الأسبوع لهذا السجل:', '1');
+        // Calculate likely next week based on history of this routine's exercises
+        const relevantHistory = log.filter(e => scheduledRoutineForSelectedDate.exercises.some(r => r.exerciseName === e.exercise));
+        const lastWeek = relevantHistory.length > 0 ? Math.max(...relevantHistory.map(e => e.week)) : 1;
+
+        const weekStr = prompt('الرجاء إدخال رقم الأسبوع لهذا السجل:', String(lastWeek));
         const weekNum = parseInt(weekStr || '', 10);
         if (!weekStr || isNaN(weekNum)) return;
 

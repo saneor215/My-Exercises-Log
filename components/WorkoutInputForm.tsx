@@ -131,7 +131,12 @@ export const WorkoutInputForm: React.FC<WorkoutInputFormProps> = ({ onAddEntry, 
   
   const handleQuickLogSchedule = () => {
       if (!todayScheduledRoutine) return;
-      const weekStr = prompt('الرجاء إدخال رقم الأسبوع:', '1');
+      
+      // Calculate likely next week
+      const relevantHistory = log.filter(e => todayScheduledRoutine.exercises.some(r => r.exerciseName === e.exercise));
+      const lastWeek = relevantHistory.length > 0 ? Math.max(...relevantHistory.map(e => e.week)) : 1;
+
+      const weekStr = prompt('الرجاء إدخال رقم الأسبوع:', String(lastWeek));
       const weekNum = parseInt(weekStr || '', 10);
       if (!weekStr || isNaN(weekNum)) return;
 
